@@ -1,7 +1,5 @@
 FROM php:8.3-cli
 
-RUN echo "========== NEW DOCKERFILE =========="
-
 RUN docker-php-ext-install pdo pdo_mysql
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -10,7 +8,7 @@ WORKDIR /app
 
 COPY composer.json composer.lock ./
 
-RUN composer install --no-dev --optimize-autoloader -vvv
+RUN composer install --no-dev --optimize-autoloader
 
 COPY . .
 
