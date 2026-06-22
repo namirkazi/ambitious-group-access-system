@@ -6,15 +6,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy composer files first
 COPY composer.json composer.lock ./
 
-# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Copy the rest of the project
 COPY . .
 
 EXPOSE 8080
 
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "."]
+CMD sh -c "php -S 0.0.0.0:${PORT:-8080} -t ."
