@@ -1,5 +1,9 @@
 FROM php:8.3-cli
 
+# Install unzip and zip extension
+RUN apt-get update && apt-get install -y unzip zip \
+    && docker-php-ext-install zip
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
