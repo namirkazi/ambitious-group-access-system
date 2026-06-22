@@ -39,11 +39,11 @@ foreach ($all_visits as $v) {
     $html .= '
         <div>
             <div class="visitor-name">' .
-            htmlspecialchars($v['full_name']) .
+            htmlspecialchars((string)($v['full_name'] ?? '')) .
             '</div>
 
             <div class="visitor-phone">' .
-            htmlspecialchars($v['phone']) .
+            htmlspecialchars((string)($v['phone'] ?? '')) .
             '</div>
         </div>
 
@@ -52,19 +52,19 @@ foreach ($all_visits as $v) {
     </td>';
 
     $html .= '<td>' .
-        htmlspecialchars($v['card_number']) .
+        htmlspecialchars((string)($v['card_number'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
-        htmlspecialchars($v['host_name']) .
+        htmlspecialchars((string)($v['host_name'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
-        htmlspecialchars($v['host_department'] ?? '—') .
+        htmlspecialchars((string)($v['host_department'] ?? '—')) .
         '</td>';
 
     $html .= '<td>' .
-        htmlspecialchars($v['purpose']) .
+        htmlspecialchars((string)($v['purpose'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
