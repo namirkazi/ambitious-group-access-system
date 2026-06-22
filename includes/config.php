@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+date_default_timezone_set('Asia/Dubai');
 $dotenv = Dotenv\Dotenv::createImmutable(
     dirname(__DIR__)
 );
@@ -62,7 +63,7 @@ function getDB()
                 ]
 
             );
-
+            $pdo->exec("SET time_zone = '+04:00'");
         }
 
         catch(PDOException $e){

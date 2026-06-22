@@ -15,12 +15,12 @@ $data = json_decode(
 );
 
 $employeeId =
-$data['employee_id'] ?? 0;
+    $data['employee_id'] ?? 0;
 
-if(!$employeeId){
+if (!$employeeId) {
 
     echo json_encode([
-        'success'=>false
+        'success' => false
     ]);
 
     exit;
@@ -28,12 +28,12 @@ if(!$employeeId){
 }
 
 $today =
-date('Y-m-d');
+    date('Y-m-d');
 
 $stmt =
-$pdo->prepare(
+    $pdo->prepare(
 
-"
+        "
 
 SELECT
 
@@ -61,25 +61,25 @@ LIMIT 1
 
 "
 
-);
+    );
 
 $stmt->execute([
 
-$employeeId,
-$today
+    $employeeId,
+    $today
 
 ]);
 
 $row =
-$stmt->fetch(
-PDO::FETCH_ASSOC
-);
+    $stmt->fetch(
+        PDO::FETCH_ASSOC
+    );
 
-if(!$row){
+if (!$row) {
 
     echo json_encode([
-        'success'=>false,
-        'message'=>'Attendance record not found'
+        'success' => false,
+        'message' => 'Attendance record not found'
     ]);
 
     exit;
@@ -89,76 +89,63 @@ if(!$row){
 date_default_timezone_set('Asia/Dubai');
 
 $checkInTime =
-new DateTime(
-    $row['check_in']
-);
+    new DateTime(
+        $row['check_in']
+    );
 
 $checkOutTime =
-new DateTime();
+    new DateTime();
 
 $interval =
-$checkInTime->diff(
-    $checkOutTime
-);
+    $checkInTime->diff(
+        $checkOutTime
+    );
 
 $totalHours =
-sprintf(
+    sprintf(
 
-    '%02d:%02d',
+        '%02d:%02d',
 
-    $interval->h +
-    ($interval->days * 24),
+        $interval->h +
+        ($interval->days * 24),
 
-    $interval->i
+        $interval->i
 
-);
+    );
 
-$stmt =
-$pdo->prepare(
-
-"
-
+$stmt = $pdo->prepare("
 UPDATE employee_attendance
-
 SET
-
-check_out = NOW(),
-
+check_out = ?,
 total_hours = ?,
-
 status='present'
-
 WHERE id=?
-
-"
-
-);
+");
 $stmt->execute([
-
-$totalHours,
-$row['id']
-
+    $checkOutTime->format('Y-m-d H:i:s'),
+    $totalHours,
+    $row['id']
 ]);
 
 echo json_encode([
 
-'success'=>true,
+    'success' => true,
 
-'name'=>
+    'name' =>
 
-$row['title']
+        $row['title']
 
-.' '.
+        . ' ' .
 
-$row['full_name'],
+        $row['full_name'],
 
-'check_out'=>
+    'check_out' =>
 
-$checkOutTime->format('h:i A'),
+        $checkOutTime->format('h:i A'),
 
-'hours'=>
+    'hours' =>
 
-$totalHours
+        $totalHours
 
 ]);
 
