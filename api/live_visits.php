@@ -68,7 +68,7 @@ foreach ($all_visits as $v) {
         '</td>';
 
     $html .= '<td>' .
-        date('d M Y, h:i A', strtotime($v['check_in'])) .
+        date('d M Y, h:i A', strtotime($v['check_in'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
