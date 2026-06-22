@@ -1,18 +1,19 @@
 FROM php:8.3-cli
 
-# Install PDO MySQL
 RUN docker-php-ext-install pdo pdo_mysql
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy project
-COPY . .
+# Copy composer files first
+COPY composer.json composer.lock ./
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# Copy the rest of the project
+COPY . .
 
 EXPOSE 8080
 
