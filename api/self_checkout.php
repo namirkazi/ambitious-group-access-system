@@ -1,11 +1,14 @@
 <?php
 
-require_once '../config/database.php';
-require_once '../includes/config.php';
+
+require_once __DIR__ . '/../includes/config.php';
+
+$pdo = getDB();
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require '../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 header('Content-Type: application/json');
 
 $phone = trim($_GET['phone'] ?? '');
@@ -61,11 +64,11 @@ $update = $pdo->prepare("
 ");
 
 $update->execute([$visit['id']]);
-if(!empty($visit['email'])){
+if (!empty($visit['email'])) {
 
     $mail = new PHPMailer(true);
     $mail->CharSet = 'UTF-8';
-    try{
+    try {
 
         $mail->isSMTP();
 
@@ -73,25 +76,25 @@ if(!empty($visit['email'])){
 
         $mail->SMTPAuth = true;
 
-$mail->Host=$_ENV['MAIL_HOST'];
+        $mail->Host = $_ENV['MAIL_HOST'];
 
-$mail->Port=$_ENV['MAIL_PORT'];
+        $mail->Port = $_ENV['MAIL_PORT'];
 
-$mail->Username=$_ENV['MAIL_USER'];
+        $mail->Username = $_ENV['MAIL_USER'];
 
-$mail->Password=$_ENV['MAIL_PASS'];
+        $mail->Password = $_ENV['MAIL_PASS'];
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
-        
+
         $mail->SMTPDebug = 2;
-        $mail->Debugoutput='html';
+        $mail->Debugoutput = 'html';
         $mail->SMTPOptions = [
-    'ssl' => [
-        'verify_peer' => false,
-        'verify_peer_name' => false,
-        'allow_self_signed' => true
-    ]
-];
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
 
         $mail->setFrom(
             'kazinamir@gmail.com',
@@ -106,7 +109,7 @@ $mail->Password=$_ENV['MAIL_PASS'];
         $mail->isHTML(true);
 
         $mail->Subject =
-        'Thank You for Visiting Ambitious Group';
+            'Thank You for Visiting Ambitious Group';
 
         $mail->Body = "
 
@@ -136,18 +139,16 @@ $mail->Password=$_ENV['MAIL_PASS'];
 
         $mail->send();
 
+    } catch (Exception $e) {
+
+        echo json_encode([
+            'success' => false,
+            'message' => $mail->ErrorInfo
+        ]);
+
+        exit();
+
     }
-
-    catch(Exception $e){
-
-    echo json_encode([
-        'success' => false,
-        'message' => $mail->ErrorInfo
-    ]);
-
-    exit();
-
-}
 
 }
 echo json_encode([
