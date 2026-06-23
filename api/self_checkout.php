@@ -1,6 +1,7 @@
 <?php
 
 require_once '../config/database.php';
+require_once '../includes/config.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
