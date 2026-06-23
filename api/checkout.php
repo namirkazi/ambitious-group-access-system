@@ -1,12 +1,5 @@
 <?php
-session_start();
 
-if (
-    !isset($_SESSION['admin_logged_in'])
-) {
-    http_response_code(403);
-    exit('Access denied');
-}
 
 require_once '../includes/config.php';
 header('Content-Type: application/json');
