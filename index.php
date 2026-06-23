@@ -931,8 +931,30 @@ ORDER BY full_name
     let pauseScanning = false;
     let employeeModalOpen = false;
     let checkoutTimeout = null;
-
+    let waitingForBlink = false;
+    let blinkVerified = false;
+    let eyesClosed = false;
     // Phone input formatting
+    function getEAR(eye) {
+
+      const A = Math.hypot(
+        eye[1].x - eye[5].x,
+        eye[1].y - eye[5].y
+      );
+
+      const B = Math.hypot(
+        eye[2].x - eye[4].x,
+        eye[2].y - eye[4].y
+      );
+
+      const C = Math.hypot(
+        eye[0].x - eye[3].x,
+        eye[0].y - eye[3].y
+      );
+
+      return (A + B) / (2 * C);
+    }
+
 
     function formatPhone(input) {
 
@@ -1039,21 +1061,75 @@ ORDER BY full_name
           faceModelsLoaded = true;
           setInterval(async () => {
 
-            if (!faceModelsLoaded)
+            if (!faceModelsLoaded) return;
+            if (processingFace) return;
+            if (pauseScanning) return;
+
+            const detection =
+              await faceapi
+                .detectSingleFace(
+                  video,
+                  new faceapi.TinyFaceDetectorOptions({
+                    inputSize: 320,
+                    scoreThreshold: 0.3
+                  })
+                )
+                .withFaceLandmarks();
+
+            if (!detection) {
+
+              waitingForBlink = false;
+              blinkVerified = false;
+              eyesClosed = false;
+
               return;
+            }
 
-            if (processingFace)
-              return;
+            if (!waitingForBlink) {
 
-            if (photo.style.display === 'block')
-              return;
+              waitingForBlink = true;
 
-            if (pauseScanning)
-              return;
+              showToast("Please blink once");
 
-            await capturePhoto();
+            }
 
-          }, 3000);
+            const leftEAR =
+              getEAR(
+                detection.landmarks.getLeftEye()
+              );
+
+            const rightEAR =
+              getEAR(
+                detection.landmarks.getRightEye()
+              );
+
+            const ear =
+              (leftEAR + rightEAR) / 2;
+            console.log("EAR:", ear);
+            // eyes closed
+            if (ear < 0.24) {
+
+              eyesClosed = true;
+
+            }
+
+            // blink completed
+            if (eyesClosed && ear > 0.28) {
+
+              blinkVerified = true;
+
+              waitingForBlink = false;
+
+              eyesClosed = false;
+
+              showToast("Liveness verified");
+
+              pauseScanning = true;
+              await capturePhoto();
+
+            }
+
+          }, 150);
         })
         .catch(() => {
           document.querySelector('.camera-box').innerHTML =
@@ -1112,7 +1188,8 @@ ORDER BY full_name
 
       capturedPhotoData = null;
       currentFaceDescriptor = null;
-
+      blinkDetected = false;
+      eyesWereClosed = false;
       photo.style.display = 'none';
 
       document.getElementById('captureBtn').style.display = '';
@@ -1134,6 +1211,9 @@ ORDER BY full_name
       // Resume scanning
       pauseScanning = false;
       processingFace = false;
+      waitingForBlink = false;
+
+      eyesClosed = false;
 
     }
     async function identifyFace() {
@@ -1483,6 +1563,11 @@ ORDER BY full_name
         pauseScanning = false;
 
         employeeModalOpen = false;
+        waitingForBlink = false;
+        blinkVerified = false;
+        eyesClosed = false;
+        processingFace = false;
+        pauseScanning = false;
 
       }, 5000);
 
@@ -1929,7 +2014,7 @@ ORDER BY full_name
 
       employeeModalOpen = false;
 
-}
+    }
 
     function showToast(message) {
 
