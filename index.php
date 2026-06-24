@@ -1105,7 +1105,7 @@ ORDER BY full_name
 
             const ear =
               (leftEAR + rightEAR) / 2;
-            console.log("EAR:", ear);
+            //console.log("EAR:", ear);
             // eyes closed
             if (ear < 0.24) {
 
@@ -1188,8 +1188,6 @@ ORDER BY full_name
 
       capturedPhotoData = null;
       currentFaceDescriptor = null;
-      blinkDetected = false;
-      eyesWereClosed = false;
       photo.style.display = 'none';
 
       document.getElementById('captureBtn').style.display = '';
