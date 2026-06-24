@@ -50,58 +50,19 @@ AND check_out IS NULL
 $absentEmployees =
     $totalEmployees - $presentEmployees;
 
-$filter =
-    $_GET['filter']
+$from =
+    $_GET['from']
     ??
-    'today';
+    date('Y-m-d');
 
-switch ($filter) {
-
-    case 'week':
-
-        $where =
-            "YEARWEEK(
-ea.attendance_date,
-1
-)=YEARWEEK(
-CURDATE(),
-1
-)";
-
-        break;
-
-    case 'month':
-
-        $where =
-            "MONTH(
-ea.attendance_date
-)=MONTH(
-CURDATE()
-)
-AND YEAR(
-ea.attendance_date
-)=YEAR(
-CURDATE()
-)";
-
-        break;
-
-    case 'all':
-
-        $where =
-            "1";
-
-        break;
-
-    default:
-
-        $where =
-            "ea.attendance_date=CURDATE()";
-
-}
+$to =
+    $_GET['to']
+    ??
+    date('Y-m-d');
 
 
-$attendance = $pdo->query("
+$stmt = $pdo->prepare("
+
 SELECT
 
 e.id,
@@ -120,13 +81,21 @@ FROM employee_attendance ea
 JOIN employees e
 ON ea.employee_id=e.id
 
-WHERE $where
+WHERE DATE(ea.attendance_date)
+BETWEEN ? AND ?
 
 ORDER BY
 ea.attendance_date DESC,
 ea.check_in DESC
 
-")->fetchAll();
+");
+
+$stmt->execute([
+    $from,
+    $to
+]);
+
+$attendance = $stmt->fetchAll();
 ?>
 
 <head>
@@ -335,6 +304,121 @@ ea.check_in DESC
             color: var(--danger);
         }
 
+        .date-filter {
+
+            display: flex;
+            align-items: end;
+            gap: 12px;
+
+        }
+
+        .date-group {
+
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+        }
+
+        .date-group label {
+
+            font-size: .75rem;
+            color: var(--muted);
+
+            text-transform: uppercase;
+            letter-spacing: .05em;
+
+        }
+
+        .date-group input {
+
+            background: var(--surface2);
+
+            color: var(--text);
+
+            border: 1px solid var(--border);
+
+            border-radius: 10px;
+
+            padding: .65rem .85rem;
+
+            font-size: .85rem;
+
+            min-width: 170px;
+
+            transition: .2s;
+
+        }
+
+        .date-group input:focus {
+
+            outline: none;
+
+            border-color: var(--accent);
+
+            box-shadow:
+                0 0 0 3px rgba(108, 99, 255, .15);
+
+        }
+
+        .report-toolbar {
+
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            flex-wrap: wrap;
+
+        }
+
+        .export-buttons {
+
+            display: flex;
+            gap: .5rem;
+            align-items: flex-end;
+
+        }
+
+        .date-filter {
+
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+
+        }
+
+        @media(max-width:900px) {
+
+            .date-filter {
+
+                flex-direction: column;
+                align-items: stretch;
+
+            }
+
+            .date-group input {
+
+                width: 100%;
+
+            }
+
+        }
+
+        .range-info {
+
+            padding: 1rem 1.5rem;
+
+            background: rgba(108, 99, 255, .08);
+
+            border-bottom: 1px solid var(--border);
+
+            color: var(--accent2);
+
+            font-weight: 600;
+
+        }
+
         h2 {
             font-size: 1.1rem;
             font-weight: 700;
@@ -465,6 +549,16 @@ ea.check_in DESC
             border-radius: 999px;
             font-size: .75rem;
             font-weight: 600;
+        }
+
+        .badge.missed {
+
+            background:
+                rgba(239, 68, 68, .15);
+
+            color:
+                var(--danger);
+
         }
 
         .badge.in {
@@ -708,45 +802,69 @@ gap:.75rem;
         </div>
         <div class="table-card">
 
-            <div class="card-header">
+            <div class="card-header report-toolbar">
 
                 <h2>
 
                     Attendance History
 
                 </h2>
-                <div>
-                    <button class="checkout-btn" onclick="openFilterModal()">
+                <div class="date-filter">
 
-                        Filter
+                    <div class="date-group">
 
+                        <label>From Date</label>
+
+                        <input type="date" id="fromDate" value="<?= $from ?>">
+
+                    </div>
+
+                    <div class="date-group">
+
+                        <label>To Date</label>
+
+                        <input type="date" id="toDate" value="<?= $to ?>">
+
+                    </div>
+
+                    <button class="checkout-btn" onclick="applyDateFilter()">
+                        Apply
                     </button>
+                    <div class="export-buttons">
+
+                        <button class="checkout-btn" onclick="resetFilter()">
+                            Reset
+                        </button>
+
+                        <?php if ($_SESSION['role'] == 'hr'): ?>
+
+                            <button class="checkout-btn" onclick="exportPDF()">
+                                PDF
+                            </button>
+
+                            <button class="checkout-btn" onclick="exportExcel()">
+                                Excel
+                            </button>
+
+                            <button class="checkout-btn" onclick="window.print()">
+                                Print
+                            </button>
+
+                        <?php endif; ?>
+
+                    </div>
+
                 </div>
 
-                <button class="checkout-btn" onclick="resetFilter()">
+            </div>
+            <div class="range-info">
+                Showing records from
 
-                    Reset
+                <?= date('d M Y', strtotime($from)) ?>
 
-                </button>
-                <div>
-                    <?php if ($_SESSION['role'] == 'hr'): ?>
+                to
 
-                        <button class="checkout-btn" onclick="exportPDF()">
-                            PDF
-                        </button>
-                        <button class="checkout-btn" onclick="window.print()">
-
-                            Print
-
-                        </button>
-
-                        <button class="checkout-btn" onclick="exportExcel()">
-
-                            Excel
-
-                        </button>
-                    <?php endif; ?>
-                </div>
+                <?= date('d M Y', strtotime($to)) ?>
 
             </div>
             <table>
@@ -903,20 +1021,37 @@ gap:.75rem;
 
                             <td>
 
+                                <?php
+
+                                $attendanceDate =
+                                    date(
+                                        'Y-m-d',
+                                        strtotime(
+                                            $row['attendance_date']
+                                        )
+                                    );
+
+                                $today =
+                                    date('Y-m-d');
+
+                                ?>
+
                                 <?php if ($row['check_out']): ?>
 
                                     <span class="badge out">
-
                                         Checked Out
+                                    </span>
 
+                                <?php elseif ($attendanceDate == $today): ?>
+
+                                    <span class="badge in">
+                                        Present
                                     </span>
 
                                 <?php else: ?>
 
-                                    <span class="badge in">
-
-                                        Present
-
+                                    <span class="badge missed">
+                                        Missed Checkout
                                     </span>
 
                                 <?php endif; ?>
@@ -933,179 +1068,114 @@ gap:.75rem;
 
         </div>
 
-    </div>
-    <script>
 
-        const searchInput =
-            document.getElementById(
-                'searchInput'
-            );
+        <script>
 
-        const clearBtn =
-            document.getElementById(
-                'clearSearch'
-            );
+            const searchInput =
+                document.getElementById(
+                    'searchInput'
+                );
 
-        searchInput.addEventListener(
-            'input',
-            function () {
+            const clearBtn =
+                document.getElementById(
+                    'clearSearch'
+                );
 
-                const value =
-                    this.value.toLowerCase();
+            searchInput.addEventListener(
+                'input',
+                function () {
 
-                clearBtn.style.display =
-                    value ? 'block' : 'none';
+                    const value =
+                        this.value.toLowerCase();
 
-                document
-                    .querySelectorAll(
-                        '.table-card tbody tr'
-                    )
-                    .forEach(row => {
+                    clearBtn.style.display =
+                        value ? 'block' : 'none';
 
-                        row.style.display =
-                            row.innerText
-                                .toLowerCase()
-                                .includes(value)
-                                ?
-                                ''
-                                :
-                                'none';
+                    document
+                        .querySelectorAll(
+                            '.table-card tbody tr'
+                        )
+                        .forEach(row => {
 
-                    });
+                            row.style.display =
+                                row.innerText
+                                    .toLowerCase()
+                                    .includes(value)
+                                    ?
+                                    ''
+                                    :
+                                    'none';
 
-            });
+                        });
 
-        clearBtn.onclick = () => {
+                });
 
-            searchInput.value = '';
+            clearBtn.onclick = () => {
 
-            searchInput.dispatchEvent(
-                new Event('input')
-            );
+                searchInput.value = '';
 
-        };
+                searchInput.dispatchEvent(
+                    new Event('input')
+                );
 
-        function exportExcel() {
+            };
+            function applyDateFilter() {
 
-            window.location =
-                'api/export_excel.php';
+                const from =
+                    document.getElementById(
+                        'fromDate'
+                    ).value;
 
-        }
-        function openFilterModal() {
+                const to =
+                    document.getElementById(
+                        'toDate'
+                    ).value;
 
-            document.getElementById(
-                'filterModal'
-            ).style.display = 'flex';
+                window.location =
+                    `attendance.php?from=${from}&to=${to}`;
 
-        }
+            }
+            function exportExcel() {
 
-        function closeFilterModal() {
+                const from =
+                    document.getElementById('fromDate').value;
 
-            document.getElementById(
-                'filterModal'
-            ).style.display = 'none';
+                const to =
+                    document.getElementById('toDate').value;
 
-        }
+                window.open(
+                    `api/export_excel.php?from=${from}&to=${to}`
+                );
 
-        function applyFilter() {
+            }
 
-            const filter =
-                document.querySelector(
-                    'input[name="filter"]:checked'
-                ).value;
 
-            window.location =
-                'attendance.php?filter='
-                +
-                filter;
 
-        }
 
-        function resetFilter() {
 
-            window.location =
-                'attendance.php';
+            function resetFilter() {
 
-        }
+                window.location =
+                    'attendance.php';
 
-        function exportPDF() {
+            }
 
-            const filter =
-                document.querySelector(
-                    'input[name="filter"]:checked'
-                ).value;
+            function exportPDF() {
 
-            window.location =
-                'api/export_pdf.php?filter=' + filter;
+                const from =
+                    document.getElementById('fromDate').value;
 
-        }
+                const to =
+                    document.getElementById('toDate').value;
 
-    </script>
-    <div class="modal-overlay" id="filterModal">
+                window.open(
+                    `api/export_pdf.php?from=${from}&to=${to}`
+                );
 
-        <div class="modal-box">
+            }
 
-            <h3>
+        </script>
 
-                Attendance Filter
-
-            </h3>
-
-            <label>
-
-                <input type="radio" name="filter" value="today" <?= $filter == 'today' ? 'checked' : '' ?>>
-
-                Today
-
-            </label>
-
-            <br><br>
-
-            <label>
-
-                <input type="radio" name="filter" value="week" <?= $filter == 'week' ? 'checked' : '' ?>>
-
-                This Week
-
-            </label>
-
-            <br><br>
-
-            <label>
-
-                <input type="radio" name="filter" value="month" <?= $filter == 'month' ? 'checked' : '' ?>>
-
-                This Month
-
-            </label>
-
-            <br><br>
-
-            <label>
-
-                <input type="radio" name="filter" value="all" <?= $filter == 'all' ? 'checked' : '' ?>>
-
-                All Records
-
-            </label>
-
-            <br><br>
-
-            <button class="checkout-btn" onclick="applyFilter()">
-
-                Apply
-
-            </button>
-
-            <button class="checkout-btn" onclick="closeFilterModal()">
-
-                Cancel
-
-            </button>
-
-        </div>
-
-    </div>
 </body>
 
 </html>

@@ -30,133 +30,115 @@ $options->set('isRemoteEnabled', true);
 $dompdf = new Dompdf($options);
 
 $pdo = getDB();
+$totalEmployees =
+    $pdo->query(
+        "SELECT COUNT(*) FROM employees"
+    )->fetchColumn();
 $logoPath =
-__DIR__.'/../comp-logo/logo.png';
+    __DIR__ . '/../comp-logo/logo.png';
 
 $type =
-pathinfo(
-    $logoPath,
-    PATHINFO_EXTENSION
-);
+    pathinfo(
+        $logoPath,
+        PATHINFO_EXTENSION
+    );
 
 $data =
-file_get_contents(
-    $logoPath
-);
+    file_get_contents(
+        $logoPath
+    );
 
 $logo =
-'data:image/'.
-$type.
-';base64,'.
-base64_encode(
-    $data
-);
+    'data:image/' .
+    $type .
+    ';base64,' .
+    base64_encode(
+        $data
+    );
 
-$filter = $_GET['filter'] ?? 'today';
-if($filter=='today'){
+$from =
+$_GET['from'] ??
+date('Y-m-d');
 
-    $stmt = $pdo->query("
+$to =
+$_GET['to'] ??
+date('Y-m-d');
 
-        SELECT
+$stmt = $pdo->prepare("
 
-        e.full_name,
+SELECT
 
-        a.check_in,
+e.full_name,
+a.check_in,
+a.check_out,
+a.total_hours
 
-        a.check_out,
+FROM employee_attendance a
 
-        a.total_hours
+JOIN employees e
+ON a.employee_id=e.id
 
-        FROM employee_attendance a
+WHERE DATE(a.check_in)
+BETWEEN ? AND ?
 
-        JOIN employees e
+ORDER BY a.check_in DESC
 
-        ON a.employee_id=e.id
+");
 
-        WHERE DATE(a.check_in)=CURDATE()
-
-        ORDER BY a.check_in DESC
-
-    ");
-
-}
-
-elseif($filter=='week'){
-
-    $stmt = $pdo->query("
-
-        SELECT
-
-        e.full_name,
-
-        a.check_in,
-
-        a.check_out,
-
-        a.total_hours
-
-        FROM employee_attendance a
-
-        JOIN employees e
-
-        ON a.employee_id=e.id
-
-        WHERE YEARWEEK(a.check_in)=YEARWEEK(NOW())
-
-        ORDER BY a.check_in DESC
-
-    ");
-
-}
-
-else{
-
-    $stmt = $pdo->query("
-
-        SELECT
-
-        e.full_name,
-
-        a.check_in,
-
-        a.check_out,
-
-        a.total_hours
-
-        FROM employee_attendance a
-
-        JOIN employees e
-
-        ON a.employee_id=e.id
-
-        WHERE MONTH(a.check_in)=MONTH(NOW())
-
-        AND YEAR(a.check_in)=YEAR(NOW())
-
-        ORDER BY a.check_in DESC
-
-    ");
-
-}
+$stmt->execute([
+    $from,
+    $to
+]);
 
 $rows = $stmt->fetchAll();
-$total=count($rows);
+$totalAttendanceRecords = count($rows);
 
-$present=0;
+$present = 0;
 
-foreach($rows as $row){
+foreach ($rows as $row) {
 
-if(!$row['check_out']){
+    if (!$row['check_out']) {
 
-$present++;
+        $present++;
+
+    }
 
 }
 
-}
+$completed = $totalAttendanceRecords - $present;
 
-$completed=
-$total-$present;
-$html='
+// Total registered employees
+$totalEmployees =
+    $pdo->query(
+        "SELECT COUNT(*) FROM employees"
+    )->fetchColumn();
+
+$absent =
+    $totalEmployees -
+    ($present + $completed);
+$absentStmt = $pdo->prepare("
+SELECT full_name
+FROM employees
+WHERE id NOT IN (
+
+    SELECT DISTINCT employee_id
+
+    FROM employee_attendance
+
+    WHERE DATE(check_in)
+    BETWEEN ? AND ?
+
+)
+");
+
+$absentStmt->execute([
+    $from,
+    $to
+]);
+
+$absentEmployees =
+$absentStmt->fetchAll();
+$html = '
 
 <style>
 
@@ -220,7 +202,7 @@ $html .= '
 
 <div class="header">
 
-<img src="'.$logo.'">
+<img src="' . $logo . '">
 
 <div class="title">
 
@@ -243,13 +225,13 @@ $html .= '
 
 <b>Filter:</b>
 
-'.ucfirst($filter).'
+' . $from . ' to ' . $to . '
 
 <br><br>
 
 <b>Generated:</b>
 
-'.date('d M Y h:i A').'
+' . date('d M Y h:i A') . '
 
 <hr>
 
@@ -262,19 +244,15 @@ $html .= '
 <th>Total Employees</th>
 <th>Present</th>
 <th>Completed</th>
-
+<th>Absent</th>
 </tr>
 
 <tr>
-
-<td>'.$total.'</td>
-
-<td>'.$present.'</td>
-
-<td>'.$completed.'</td>
-
+<td>' . $totalEmployees . '</td>
+<td>' . $present . '</td>
+<td>' . $completed . '</td>
+<td>' . $absent . '</td>
 </tr>
-
 </table>
 
 <br><br>
@@ -297,55 +275,55 @@ $html .= '
 </tr>
 
 ';
-foreach($rows as $row){
+foreach ($rows as $row) {
 
-$html .= '
+    $html .= '
 
 <tr>
 
-<td>'.$row['full_name'].'</td>
+<td>' . $row['full_name'] . '</td>
 
-<td>'.date(
-'h:i A',
-strtotime($row['check_in'])
-).'</td>
+<td>' . date(
+        'h:i A',
+        strtotime($row['check_in'])
+    ) . '</td>
 
-<td>'.
+<td>' .
 
-(
-$row['check_out']
+        (
+            $row['check_out']
 
-?
+            ?
 
-date(
-'h:i A',
-strtotime($row['check_out'])
-)
+            date(
+                'h:i A',
+                strtotime($row['check_out'])
+            )
 
-:
+            :
 
-'-'
+            '-'
 
-)
+        )
 
-.'</td>
+        . '</td>
 
-<td>'.
+<td>' .
 
-(
-$row['total_hours']
+        (
+            $row['total_hours']
 
-?
+            ?
 
-$row['total_hours']
+            $row['total_hours']
 
-:
+            :
 
-'-'
+            '-'
 
-)
+        )
 
-.'</td>
+        . '</td>
 
 </tr>
 
@@ -356,6 +334,32 @@ $html .= '
 
 </table>
 
+<br><br><br>
+<h3>Absent Employees</h3>
+
+<table>
+
+<tr>
+<th>Employee Name</th>
+</tr>
+
+';
+
+foreach($absentEmployees as $emp){
+
+    $html .= '
+
+    <tr>
+        <td>'.$emp['full_name'].'</td>
+    </tr>
+
+    ';
+
+}
+
+$html .= '
+
+</table>
 <br><br><br>
 
 <div style="margin-top:50px">
@@ -403,13 +407,13 @@ Dubai, UAE
 ';
 $dompdf->loadHtml($html);
 
-$dompdf->setPaper('A4','landscape');
+$dompdf->setPaper('A4', 'landscape');
 
 $dompdf->render();
 
 $dompdf->stream(
     'attendance_report.pdf',
     [
-        'Attachment'=>true
+        'Attachment' => true
     ]
 );
