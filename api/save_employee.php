@@ -127,16 +127,27 @@ if (
 }
 $uploadDir = '../uploads/employees/';
 
-if (
-    !is_dir($uploadDir)
-) {
+if (!is_dir($uploadDir)) {
 
-    mkdir(
-        $uploadDir,
-        0777,
-        true
-    );
+    if (!mkdir($uploadDir, 0755, true)) {
 
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to create upload directory.'
+        ]);
+
+        exit;
+    }
+}
+
+if (!is_writable($uploadDir)) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Upload directory is not writable.'
+    ]);
+
+    exit;
 }
 $image = str_replace(
     'data:image/jpeg;base64,',
@@ -158,12 +169,38 @@ $filePath =
     $uploadDir .
     $fileName;
 
-file_put_contents(
-    $filePath,
-    base64_decode(
-        $image
-    )
-);
+$imageData = base64_decode($image);
+
+if ($imageData === false) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Failed to decode image.'
+    ]);
+
+    exit;
+}
+
+$result = file_put_contents($filePath, $imageData);
+if (!file_exists($filePath)) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Image file was not created.'
+    ]);
+
+    exit;
+}
+
+if ($result === false) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unable to save image to: ' . $filePath
+    ]);
+
+    exit;
+}
 $stmt =
     $pdo->prepare(
 
