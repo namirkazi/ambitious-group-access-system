@@ -9,7 +9,7 @@ id,
 CONCAT(title,' ',full_name) AS name,
 department
 FROM employees
-ORDER BY full_name
+ORDER BY id ASC
 "
 )->fetchAll();
 ?>
