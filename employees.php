@@ -28,7 +28,7 @@ $employees = $pdo->query("
 SELECT *
 FROM employees
 WHERE active=1
-ORDER BY full_name
+ORDER BY id ASC
 ")->fetchAll();
 
 ?>
@@ -629,7 +629,7 @@ AND e.active = 1
 
                     <tr>
 
-                        <th>Id</th>
+                        <th>SR</th>
 
                         <th>Name</th>
 
@@ -644,14 +644,14 @@ AND e.active = 1
                 </thead>
 
                 <tbody>
-
+                    <?php $sr = 1; ?>
                     <?php foreach ($employees as $emp): ?>
 
                         <tr>
 
                             <td>
 
-                                <?= $emp['id'] ?>
+                                <?= $sr++ ?>
 
                             </td>
 
