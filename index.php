@@ -9,6 +9,7 @@ id,
 CONCAT(title,' ',full_name) AS name,
 department
 FROM employees
+WHERE active = 1
 ORDER BY id ASC
 "
 )->fetchAll();
