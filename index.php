@@ -1071,7 +1071,7 @@ ORDER BY id ASC
                 .detectSingleFace(
                   video,
                   new faceapi.TinyFaceDetectorOptions({
-                    inputSize: 320,
+                    inputSize: 160,
                     scoreThreshold: 0.3
                   })
                 )
@@ -1130,7 +1130,7 @@ ORDER BY id ASC
 
             }
 
-          }, 150);
+          }, 200);
         })
         .catch(() => {
           document.querySelector('.camera-box').innerHTML =
@@ -1138,7 +1138,7 @@ ORDER BY id ASC
         });
     })();
     async function capturePhoto() {
-
+                  console.time("Capture Photo");
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
 
@@ -1148,40 +1148,15 @@ ORDER BY id ASC
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      const detection =
-        await faceapi
-          .detectSingleFace(
-            canvas,
-            new faceapi.TinyFaceDetectorOptions({
-              inputSize: 512,
-              scoreThreshold: 0.2
-            })
-          );
-
-      if (!detection) {
-
-        showToast(
-          'No face detected'
-        );
-
-        setTimeout(() => {
-
-          retakePhoto();
-
-        }, 1000);
-
-        return;
-
-      }
-
-      capturedPhotoData = canvas.toDataURL('image/jpeg', .85);
+      
+      capturedPhotoData = canvas.toDataURL('image/jpeg',  .6);
 
       photo.src = capturedPhotoData;
       photo.style.display = 'block';
       pauseScanning = true;
       document.getElementById('captureBtn').style.display = 'none';
       document.getElementById('retakeBtn').style.display = '';
-
+                  console.timeEnd("Capture Photo");
       await identifyFace();
     }
 
@@ -1216,7 +1191,7 @@ ORDER BY id ASC
 
     }
     async function identifyFace() {
-
+                  console.time("Identify Face");
       if (processingFace)
         return;
 
@@ -1238,8 +1213,8 @@ ORDER BY id ASC
           .detectSingleFace(
             canvas,
             new faceapi.TinyFaceDetectorOptions({
-              inputSize: 512,
-              scoreThreshold: 0.2
+              inputSize: 160,
+              scoreThreshold: 0.3
             })
           )
           .withFaceLandmarks()
@@ -1272,7 +1247,7 @@ ORDER BY id ASC
         Array.from(
           detection.descriptor
         );
-
+        console.timeEnd("Identify Face");
       fetch(
         'api/person_lookup.php',
         {
