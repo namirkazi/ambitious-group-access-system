@@ -39,6 +39,7 @@ WHERE active=1
 
 $bestEmployee = null;
 $bestEmployeeDistance = 999;
+$secondBestDistance = 999;
 
 while($row = $stmtEmp->fetch(PDO::FETCH_ASSOC)){
 
@@ -69,11 +70,17 @@ while($row = $stmtEmp->fetch(PDO::FETCH_ASSOC)){
 
     if($distance < $bestEmployeeDistance){
 
+        $secondBestDistance = $bestEmployeeDistance;
         $bestEmployeeDistance = $distance;
-
+        
         $bestEmployee = $row;
 
     }
+    elseif ($distance < $secondBestDistance) {
+
+    $secondBestDistance = $distance;
+
+}
 
 }
 
@@ -125,7 +132,10 @@ if(
 
     &&
 
-    $bestEmployeeDistance < 0.55
+    $bestEmployeeDistance < 0.45
+     &&
+
+    ($secondBestDistance - $bestEmployeeDistance) > 0.05
 
 ){
 
@@ -159,7 +169,7 @@ if(
 }
 if (
     $bestVisitor !== null &&
-    $bestDistance < 0.55
+    $bestDistance < 0.45
 ) {
 
     // Check whether visitor is currently inside
