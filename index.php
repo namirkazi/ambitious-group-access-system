@@ -88,7 +88,48 @@ ORDER BY id ASC
       font-family: var(--font);
       min-height: 100vh;
       display: grid;
+      overflow: hidden;
       grid-template-rows: auto 1fr auto;
+    }
+
+    .btn-clear {
+
+      display: none;
+
+      width: 100%;
+
+      margin-top: .75rem;
+
+      padding: .9rem;
+
+      border: none;
+
+      border-radius: 8px;
+
+      background: #374151;
+
+      color: #fff;
+
+      font-size: .95rem;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition: .25s;
+
+    }
+
+    .btn-clear:hover {
+
+      background: #4b5563;
+
+    }
+
+    .btn-clear:active {
+
+      transform: scale(.98);
+
     }
 
     /* HEADER */
@@ -163,9 +204,9 @@ ORDER BY id ASC
     /* MAIN LAYOUT */
     main {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 430px 1fr;
       gap: 0;
-      height: calc(100vh - 64px);
+      min-height: calc(100dvh - 64px);
     }
 
     /* LEFT PANEL — Camera + ID */
@@ -421,7 +462,7 @@ ORDER BY id ASC
 
     /* RIGHT PANEL — Form */
     .right-panel {
-      overflow-y: auto;
+      overflow-y: hidden;
       padding: 2rem;
       display: flex;
       flex-direction: column;
@@ -878,6 +919,9 @@ ORDER BY id ASC
         <button class="btn btn-submit" onclick="submitForm()" id="submitBtn">
           Register Visit
         </button>
+        <button id="clearBtn" class="btn btn-clear" onclick="clearForm()" style="display:none">
+          Clear
+        </button>
       </div>
       <div id="employeeResult" style="display:none"></div>
       <!-- Success screen -->
@@ -935,6 +979,7 @@ ORDER BY id ASC
     let waitingForBlink = false;
     let blinkVerified = false;
     let eyesClosed = false;
+    let inactivityTimer;
     // Phone input formatting
     function getEAR(eye) {
 
@@ -955,7 +1000,101 @@ ORDER BY id ASC
 
       return (A + B) / (2 * C);
     }
+    function isFaceStraight(landmarks) {
 
+      const nose = landmarks.getNose();
+
+      const jaw = landmarks.getJawOutline();
+
+      const leftJaw = jaw[0];
+      const rightJaw = jaw[16];
+
+      const noseTip = nose[3];
+
+      const faceCenter =
+        (leftJaw.x + rightJaw.x) / 2;
+
+      const faceWidth =
+        rightJaw.x - leftJaw.x;
+
+      const offset =
+        Math.abs(noseTip.x - faceCenter);
+
+      // Reject if nose moves more than 12% of face width
+      if (offset > faceWidth * 0.12) {
+
+        return false;
+
+      }
+
+      return true;
+
+    }
+    function clearForm() {
+
+      retakePhoto();
+
+      resetReturnState();
+
+      document.getElementById('fullName').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('phoneDisplay').value = '';
+      document.getElementById('purpose').value = '';
+      document.getElementById('hostDept').value = '';
+      document.getElementById('otherHost').value = '';
+
+      document.getElementById('hostSelect').selectedIndex = 0;
+
+      document.getElementById('clearBtn').style.display = 'none';
+
+      resetInactivityTimer();
+
+    }
+    function toggleClearButton() {
+
+      const fields = [
+
+        'fullName',
+        'email',
+        'phoneDisplay',
+        'purpose',
+        'otherHost'
+
+      ];
+
+      const show = fields.some(id => {
+
+        return document
+          .getElementById(id)
+          .value
+          .trim() !== '';
+
+      });
+
+      document.getElementById('clearBtn').style.display =
+        show ? 'block' : 'none';
+
+    }
+    function resetInactivityTimer() {
+
+      clearTimeout(inactivityTimer);
+
+      inactivityTimer = setTimeout(() => {
+
+        if (employeeModalOpen)
+          return;
+
+        showToast("Returning to home screen...");
+
+        setTimeout(() => {
+
+          resetForm();
+
+        }, 800);
+
+      }, 15000);
+
+    }
 
     function formatPhone(input) {
 
@@ -1086,11 +1225,37 @@ ORDER BY id ASC
               return;
             }
 
+            // Reject side faces BEFORE asking for a blink
+            if (!isFaceStraight(detection.landmarks)) {
+
+              waitingForBlink = false;
+              blinkVerified = false;
+              eyesClosed = false;
+
+              if (!window.faceWarningShown) {
+
+                showToast("Please face the camera","Please Face the camera");
+
+                window.faceWarningShown = true;
+
+                setTimeout(() => {
+
+                  window.faceWarningShown = false;
+
+                }, 2000);
+
+              }
+
+              return;
+            }
+
+            // Only now ask for a blink
             if (!waitingForBlink) {
 
               waitingForBlink = true;
 
-              showToast("Please blink once");
+              showToast("Please blink once",
+                "Please look straight at the camera and blink once.");
 
             }
 
@@ -1123,7 +1288,8 @@ ORDER BY id ASC
 
               eyesClosed = false;
 
-              showToast("Liveness verified");
+              showToast("Liveness verified",
+                "Liveness verified. Please wait while we recognize you.");
 
               pauseScanning = true;
               await capturePhoto();
@@ -1138,7 +1304,7 @@ ORDER BY id ASC
         });
     })();
     async function capturePhoto() {
-                  console.time("Capture Photo");
+      console.time("Capture Photo");
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
 
@@ -1148,15 +1314,15 @@ ORDER BY id ASC
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      
-      capturedPhotoData = canvas.toDataURL('image/jpeg',  .6);
+
+      capturedPhotoData = canvas.toDataURL('image/jpeg', .6);
 
       photo.src = capturedPhotoData;
       photo.style.display = 'block';
       pauseScanning = true;
       document.getElementById('captureBtn').style.display = 'none';
       document.getElementById('retakeBtn').style.display = '';
-                  console.timeEnd("Capture Photo");
+      console.timeEnd("Capture Photo");
       await identifyFace();
     }
 
@@ -1178,7 +1344,7 @@ ORDER BY id ASC
       document.getElementById('otherHost').value = '';
       document.getElementById('hostSelect').selectedIndex = 0;
       document.getElementById('otherHostGroup').style.display = 'none';
-
+      document.getElementById('clearBtn').style.display = 'none';
       // Remove returning visitor card
       resetReturnState();
 
@@ -1191,7 +1357,7 @@ ORDER BY id ASC
 
     }
     async function identifyFace() {
-                  console.time("Identify Face");
+      console.time("Identify Face");
       if (processingFace)
         return;
 
@@ -1230,7 +1396,7 @@ ORDER BY id ASC
         processingFace = false;
 
         showToast(
-          'No face detected'
+          'No face detected',"No Face Detected"
         );
 
         setTimeout(() => {
@@ -1247,7 +1413,7 @@ ORDER BY id ASC
         Array.from(
           detection.descriptor
         );
-        console.timeEnd("Identify Face");
+      console.timeEnd("Identify Face");
       fetch(
         'api/person_lookup.php',
         {
@@ -1400,7 +1566,7 @@ ORDER BY id ASC
             else {
 
               showToast(
-                "👋 Welcome back!"
+                "👋 Welcome back!", "Welcome Back"
               );
 
               loadVisitorByFace(
@@ -1420,8 +1586,10 @@ ORDER BY id ASC
           // =====================
 
           showToast(
-            "New visitor detected\nPlease fill in your details"
+            "New visitor detected",
+            "Welcome. Please fill in your details."
           );
+          toggleClearButton();
 
           document.getElementById(
             'lookupHint'
@@ -1445,7 +1613,7 @@ ORDER BY id ASC
           pauseScanning = false;
 
           showToast(
-            'Recognition failed'
+            'Recognition failed',"Recognition Failed"
           );
 
           setTimeout(() => {
@@ -1567,7 +1735,7 @@ ORDER BY id ASC
 
             showToast(
               "Checked out successfully.\n\nPlease return your Visitor Card " +
-              data.card_number
+              data.card_number,"Please Return Your visitor. Thank You for visiting."
             );
             setTimeout(() => {
 
@@ -1763,7 +1931,7 @@ ORDER BY id ASC
       if (!phoneRegex.test(phone)) {
 
         showToast(
-          'Please enter a valid UAE mobile number'
+          'Please enter a valid UAE mobile number',"Enter valid Number"
         );
         return;
       }
@@ -1909,7 +2077,7 @@ ORDER BY id ASC
       document.getElementById('hostSelect').selectedIndex = 0;
       document.getElementById('phoneDisplay').value = '';
       document.getElementById('otherHostGroup').style.display = 'none';
-
+      document.getElementById('clearBtn').style.display = 'none';
       retakePhoto();
       resetReturnState();
       capturedPhotoData = null;
@@ -1923,6 +2091,22 @@ ORDER BY id ASC
       el.addEventListener('focus', () => {
 
         pauseScanning = true;
+
+      });
+
+      el.addEventListener('input', () => {
+
+        toggleClearButton();
+
+        resetInactivityTimer();
+
+      });
+
+      el.addEventListener('change', () => {
+
+        toggleClearButton();
+
+        resetInactivityTimer();
 
       });
 
@@ -1990,22 +2174,51 @@ ORDER BY id ASC
 
     }
 
-    function showToast(message) {
+function showToast(message, voice = null){
 
-      const t =
-        document.getElementById(
-          'toast'
-        );
+    const t = document.getElementById('toast');
 
-      t.innerText = message;
+    t.innerText = message;
 
-      t.style.display = 'block';
+    t.style.display = 'block';
 
-      setTimeout(() => {
+    if(voice){
+        speak(voice);
+    }
+
+    setTimeout(() => {
 
         t.style.display = 'none';
 
-      }, 3000);
+    },3000);
+
+}
+    function speak(text) {
+
+      if (!('speechSynthesis' in window))
+        return;
+
+      speechSynthesis.cancel();
+
+      const msg = new SpeechSynthesisUtterance(text);
+
+      msg.rate = 1;
+
+      msg.pitch = 1;
+
+      msg.volume = 1;
+
+      // Optional: choose an English voice
+      const voices = speechSynthesis.getVoices();
+
+      const voice = voices.find(v =>
+        v.lang.startsWith("en")
+      );
+
+      if (voice)
+        msg.voice = voice;
+
+      speechSynthesis.speak(msg);
 
     }
 
@@ -2040,7 +2253,20 @@ ORDER BY id ASC
 
   <div id="toast"></div>
   <script>
+    [
+      'click',
+      'touchstart',
+      'keydown'
+    ].forEach(event => {
 
+      document.addEventListener(event, () => {
+
+        resetInactivityTimer();
+
+      });
+
+    });
+    resetInactivityTimer();
     if ('serviceWorker' in navigator) {
 
       navigator.serviceWorker.register(
