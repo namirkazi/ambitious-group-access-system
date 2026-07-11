@@ -1234,7 +1234,7 @@ ORDER BY id ASC
 
               if (!window.faceWarningShown) {
 
-                showToast("Please face the camera","Please Face the camera");
+                showToast("Please face the camera", "Please Face the camera");
 
                 window.faceWarningShown = true;
 
@@ -1396,7 +1396,7 @@ ORDER BY id ASC
         processingFace = false;
 
         showToast(
-          'No face detected',"No Face Detected"
+          'No face detected', "No Face Detected"
         );
 
         setTimeout(() => {
@@ -1613,7 +1613,7 @@ ORDER BY id ASC
           pauseScanning = false;
 
           showToast(
-            'Recognition failed',"Recognition Failed"
+            'Recognition failed', "Recognition Failed"
           );
 
           setTimeout(() => {
@@ -1735,7 +1735,7 @@ ORDER BY id ASC
 
             showToast(
               "Checked out successfully.\n\nPlease return your Visitor Card " +
-              data.card_number,"Please Return Your visitor. Thank You for visiting."
+              data.card_number, "Please Return Your visitor. Thank You for visiting."
             );
             setTimeout(() => {
 
@@ -1931,14 +1931,21 @@ ORDER BY id ASC
       if (!phoneRegex.test(phone)) {
 
         showToast(
-          'Please enter a valid UAE mobile number',"Enter valid Number"
+          'Please enter a valid UAE mobile number', "Enter valid Number"
         );
         return;
       }
       if (!isReturning && !name) { showToast('Please enter the visitor\'s full name'); return; }
       if (!hostName) { showToast('Please select or enter who they are meeting'); return; }
       if (!purpose) { showToast('Please describe the purpose of the visit'); return; }
-
+      if (!currentFaceDescriptor || currentFaceDescriptor.length !== 128) {
+        showToast("Please scan your face before registering.","Please scan your face.");
+        return;
+      }
+      if (!capturedPhotoData) {
+        showToast("Please capture your photo.","Please capture your photo.");
+        return;
+      }
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Registering…';
@@ -2174,25 +2181,25 @@ ORDER BY id ASC
 
     }
 
-function showToast(message, voice = null){
+    function showToast(message, voice = null) {
 
-    const t = document.getElementById('toast');
+      const t = document.getElementById('toast');
 
-    t.innerText = message;
+      t.innerText = message;
 
-    t.style.display = 'block';
+      t.style.display = 'block';
 
-    if(voice){
+      if (voice) {
         speak(voice);
-    }
+      }
 
-    setTimeout(() => {
+      setTimeout(() => {
 
         t.style.display = 'none';
 
-    },3000);
+      }, 3000);
 
-}
+    }
     function speak(text) {
 
       if (!('speechSynthesis' in window))

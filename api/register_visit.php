@@ -14,18 +14,52 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $pdo = getDB();
 
-$visitor_id  = intval($_POST['visitor_id'] ?? 0);
-$full_name   = trim($_POST['full_name'] ?? '');
-$phone       = trim($_POST['phone'] ?? '');
-$email       = trim($_POST['email'] ?? '');
-$host_name   = trim($_POST['host_name'] ?? '');
-$host_dept   = trim($_POST['host_department'] ?? '');
-$purpose     = trim($_POST['purpose'] ?? '');
-$photo_data  = $_POST['photo_data'] ?? '';   // base64 from webcam
+$visitor_id = intval($_POST['visitor_id'] ?? 0);
+$full_name = trim($_POST['full_name'] ?? '');
+$phone = trim($_POST['phone'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$host_name = trim($_POST['host_name'] ?? '');
+$host_dept = trim($_POST['host_department'] ?? '');
+$purpose = trim($_POST['purpose'] ?? '');
+$photo_data = $_POST['photo_data'] ?? '';   // base64 from webcam
 $face_descriptor = $_POST['face_descriptor'] ?? null;
 // Validate required fields
 if (!$phone || !$host_name || !$purpose) {
     echo json_encode(['success' => false, 'message' => 'Phone, host name and purpose are required']);
+    exit;
+}
+// Validate face descriptor
+if (empty($face_descriptor)) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Face scan is required.'
+    ]);
+
+    exit;
+}
+
+$descriptor = json_decode($face_descriptor, true);
+
+if (
+    !is_array($descriptor) ||
+    count($descriptor) !== 128
+) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid face descriptor.'
+    ]);
+
+    exit;
+}
+if (empty($photo_data)) {
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Visitor photo is required.'
+    ]);
+
     exit;
 }
 
@@ -36,10 +70,10 @@ try {
 
     // Save webcam photo if provided
     if ($photo_data && strpos($photo_data, 'data:image') === 0) {
-        $parts     = explode(',', $photo_data, 2);
-        $imgData   = base64_decode($parts[1]);
-        $filename  = 'visitor_' . time() . '_' . rand(1000, 9999) . '.jpg';
-        $filepath  = UPLOAD_DIR . $filename;
+        $parts = explode(',', $photo_data, 2);
+        $imgData = base64_decode($parts[1]);
+        $filename = 'visitor_' . time() . '_' . rand(1000, 9999) . '.jpg';
+        $filepath = UPLOAD_DIR . $filename;
 
         if (!is_dir(UPLOAD_DIR)) {
             mkdir(UPLOAD_DIR, 0755, true);
@@ -60,11 +94,11 @@ try {
     WHERE id = ?
 ");
 
-$stmt->execute([
-    $photo_path,
-    $face_descriptor,
-    $visitor_id
-]);
+            $stmt->execute([
+                $photo_path,
+                $face_descriptor,
+                $visitor_id
+            ]);
         }
     } else {
         // New visitor — check if phone already exists (race condition guard)
@@ -85,13 +119,13 @@ $stmt->execute([
     WHERE id = ?
 ");
 
-$stmt->execute([
-    $photo_path,
-    $email,
-    $full_name,
-    $face_descriptor,
-    $visitor_id
-]);
+                $stmt->execute([
+                    $photo_path,
+                    $email,
+                    $full_name,
+                    $face_descriptor,
+                    $visitor_id
+                ]);
             }
         } else {
             $stmt = $pdo->prepare("
@@ -106,48 +140,48 @@ $stmt->execute([
     VALUES (?, ?, ?, ?, ?)
 ");
             $stmt->execute([
-    $full_name,
-    $phone,
-    $email,
-    $photo_path,
-    $face_descriptor
-]);
+                $full_name,
+                $phone,
+                $email,
+                $photo_path,
+                $face_descriptor
+            ]);
             $visitor_id = $pdo->lastInsertId();
         }
     }
-// Get first available visitor card
-$stmt = $pdo->query("
+    // Get first available visitor card
+    $stmt = $pdo->query("
     SELECT card_number
     FROM visitor_cards
     WHERE status='available'
     LIMIT 1
 ");
 
-$card = $stmt->fetch();
+    $card = $stmt->fetch();
 
-if (!$card) {
+    if (!$card) {
 
-    throw new Exception(
-        'No visitor cards available.'
-    );
+        throw new Exception(
+            'No visitor cards available.'
+        );
 
-}
+    }
 
-$card_number = $card['card_number'];
+    $card_number = $card['card_number'];
 
-// Reserve the card
-$stmt = $pdo->prepare("
+    // Reserve the card
+    $stmt = $pdo->prepare("
     UPDATE visitor_cards
     SET status='in_use'
     WHERE card_number=?
 ");
 
-$stmt->execute([
-    $card_number
-]);
+    $stmt->execute([
+        $card_number
+    ]);
 
-// Log visit
-$stmt = $pdo->prepare("
+    // Log visit
+    $stmt = $pdo->prepare("
     INSERT INTO visit_logs
     (
         visitor_id,
@@ -159,25 +193,25 @@ $stmt = $pdo->prepare("
     VALUES (?, ?, ?, ?, ?)
 ");
 
-$stmt->execute([
-    $visitor_id,
-    $host_name,
-    $host_dept,
-    $purpose,
-    $card_number
-]);
+    $stmt->execute([
+        $visitor_id,
+        $host_name,
+        $host_dept,
+        $purpose,
+        $card_number
+    ]);
 
-$log_id = $pdo->lastInsertId();
+    $log_id = $pdo->lastInsertId();
     $log_id = $pdo->lastInsertId();
 
     $pdo->commit();
 
     echo json_encode([
-        'success'      => true,
-        'visitor_id'   => $visitor_id,
-        'log_id'       => $log_id,
-        'card_number'  => $card_number,
-        'message'      => 'Visit registered successfully',
+        'success' => true,
+        'visitor_id' => $visitor_id,
+        'log_id' => $log_id,
+        'card_number' => $card_number,
+        'message' => 'Visit registered successfully',
     ]);
 
 } catch (Exception $e) {
