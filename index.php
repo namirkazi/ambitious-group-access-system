@@ -3,14 +3,14 @@ require_once 'includes/config.php';
 $pdo = getDB();
 
 $hosts = $pdo->query(
-  "
+"
 SELECT
-id,
-CONCAT(title,' ',full_name) AS name,
-department
-FROM employees
+    id,
+    name,
+    department
+FROM hosts
 WHERE active = 1
-ORDER BY id ASC
+ORDER BY name ASC
 "
 )->fetchAll();
 ?>
@@ -872,6 +872,7 @@ ORDER BY id ASC
               <label>Full Name <span class="req">*</span></label>
               <input type="text" id="fullName" placeholder="Enter full name">
             </div>
+            
             <div class="form-group">
               <label>Email Address</label>
               <input type="email" id="email" placeholder="visitor@email.com">
