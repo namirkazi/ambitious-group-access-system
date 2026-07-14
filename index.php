@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/config.php';
+require_once 'api/release_cards.php';
 $pdo = getDB();
 
 $hosts = $pdo->query(

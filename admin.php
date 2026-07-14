@@ -8,11 +8,11 @@ if (!isset($_SESSION['admin_logged_in'])) {
   exit();
 
 }
-if($_SESSION['role']=='hr'){
+if ($_SESSION['role'] == 'hr') {
 
-    header("Location: attendance.php");
+  header("Location: attendance.php");
 
-    exit();
+  exit();
 
 }
 ?>
@@ -34,7 +34,7 @@ $stats = $pdo->query("
     SELECT 
         (SELECT COUNT(*) FROM visitors) as total_visitors,
         (SELECT COUNT(*) FROM visit_logs WHERE DATE(check_in) = CURDATE()) as today_visits,
-        (SELECT COUNT(*) FROM visit_logs WHERE status = 'checked_in') as currently_in,
+        (SELECT COUNT(*) FROM visit_logs WHERE status = 'checked_in' AND DATE(check_in) = CURDATE()) as currently_in,
         (SELECT COUNT(*) FROM visit_logs WHERE DATE(check_in) = CURDATE() AND status = 'checked_out') as today_out
 ")->fetch();
 
@@ -55,25 +55,15 @@ $all_visits = $pdo->query("
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard — Visitor Management</title>
-  <link rel="apple-touch-icon"
-sizes="180x180"
-href="assets/favicon/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
 
-<link rel="icon"
-type="image/png"
-sizes="32x32"
-href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
 
-<link rel="icon"
-type="image/png"
-sizes="16x16"
-href="assets/favicon/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
 
-<link rel="icon"
-href="assets/favicon/favicon.ico">
+  <link rel="icon" href="assets/favicon/favicon.ico">
 
-<link rel="manifest"
-href="assets/favicon/site.webmanifest">
+  <link rel="manifest" href="assets/favicon/site.webmanifest">
   <style>
     #toast {
 
@@ -408,6 +398,14 @@ href="assets/favicon/site.webmanifest">
       color: var(--muted);
     }
 
+    .badge.missed {
+
+      background: rgba(239, 68, 68, .15);
+
+      color: var(--danger);
+
+    }
+
     .search-bar {
 
       margin-bottom: 1.5rem;
@@ -531,11 +529,11 @@ display:flex;
 gap:.75rem;
 ">
 
-     <a href="attendance.php">
+      <a href="attendance.php">
 
-            Attendance History
+        Attendance History
 
-        </a>
+      </a>
       <a href="logout.php">
 
         ⏻ Logout

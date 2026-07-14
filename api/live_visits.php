@@ -35,11 +35,10 @@ foreach ($all_visits as $v) {
             htmlspecialchars($v['photo_path']) .
             '" alt="">';
 
-    }
-    else {
+    } else {
 
         $html .= '<div class="avatar-placeholder">' .
-            strtoupper(substr($v['full_name'],0,1)) .
+            strtoupper(substr($v['full_name'], 0, 1)) .
             '</div>';
 
     }
@@ -47,12 +46,12 @@ foreach ($all_visits as $v) {
     $html .= '
         <div>
             <div class="visitor-name">' .
-            htmlspecialchars((string)($v['full_name'] ?? '')) .
-            '</div>
+        htmlspecialchars((string) ($v['full_name'] ?? '')) .
+        '</div>
 
             <div class="visitor-phone">' .
-            htmlspecialchars((string)($v['phone'] ?? '')) .
-            '</div>
+        htmlspecialchars((string) ($v['phone'] ?? '')) .
+        '</div>
         </div>
 
         </div>
@@ -60,19 +59,19 @@ foreach ($all_visits as $v) {
     </td>';
 
     $html .= '<td>' .
-        htmlspecialchars((string)($v['card_number'] ?? '')) .
+        htmlspecialchars((string) ($v['card_number'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
-        htmlspecialchars((string)($v['host_name'] ?? '')) .
+        htmlspecialchars((string) ($v['host_name'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
-        htmlspecialchars((string)($v['host_department'] ?? '—')) .
+        htmlspecialchars((string) ($v['host_department'] ?? '—')) .
         '</td>';
 
     $html .= '<td>' .
-        htmlspecialchars((string)($v['purpose'] ?? '')) .
+        htmlspecialchars((string) ($v['purpose'] ?? '')) .
         '</td>';
 
     $html .= '<td>' .
@@ -87,26 +86,39 @@ foreach ($all_visits as $v) {
 
     $html .= '<td>';
 
-    if ($v['status'] === 'checked_in') {
+    $visitDate = date(
+        'Y-m-d',
+        strtotime($v['check_in'])
+    );
+
+    $today = date('Y-m-d');
+
+    if ($v['status'] === 'checked_out') {
 
         $html .= '
-            <button
-                class="checkout-btn"
-                onclick="checkoutVisitor('.$v['id'].')">
-                Check Out
-            </button>
+        <span class="badge out">
+            Left
+        </span>';
 
-            <span class="badge in">
-                ● Inside
-            </span>';
-
-    }
-    else {
+    } elseif ($visitDate == $today) {
 
         $html .= '
-            <span class="badge out">
-                Left
-            </span>';
+        <button
+            class="checkout-btn"
+            onclick="checkoutVisitor(' . $v['id'] . ')">
+            Check Out
+        </button>
+
+        <span class="badge in">
+            ● Inside
+        </span>';
+
+    } else {
+
+        $html .= '
+        <span class="badge missed">
+            Missed Checkout
+        </span>';
 
     }
 
