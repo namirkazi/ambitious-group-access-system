@@ -57,12 +57,14 @@ $logo =
     );
 
 $from =
-$_GET['from'] ??
-date('Y-m-d');
+    $_GET['from'] ??
+    date('Y-m-d');
 
 $to =
-$_GET['to'] ??
-date('Y-m-d');
+    $_GET['to'] ??
+    date('Y-m-d');
+$search =
+    trim($_GET['search'] ?? '');
 
 $stmt = $pdo->prepare("
 
@@ -80,6 +82,15 @@ ON a.employee_id=e.id
 
 WHERE DATE(a.check_in)
 BETWEEN ? AND ?
+AND (
+
+e.full_name LIKE ?
+
+OR e.department LIKE ?
+
+OR e.designation LIKE ?
+
+)
 
 ORDER BY a.check_in DESC
 
@@ -87,7 +98,10 @@ ORDER BY a.check_in DESC
 
 $stmt->execute([
     $from,
-    $to
+    $to,
+    "%$search%",
+    "%$search%",
+    "%$search%"
 ]);
 
 $rows = $stmt->fetchAll();
@@ -117,9 +131,9 @@ $absent =
     $totalEmployees -
     ($present + $completed);
 $absentStmt = $pdo->prepare("
-SELECT full_name
-FROM employees
-WHERE id NOT IN (
+SELECT e.full_name
+FROM employees e
+WHERE e.id NOT IN (
 
     SELECT DISTINCT employee_id
 
@@ -129,15 +143,27 @@ WHERE id NOT IN (
     BETWEEN ? AND ?
 
 )
+AND (
+
+e.full_name LIKE ?
+
+OR e.department LIKE ?
+
+OR e.designation LIKE ?
+
+)
 ");
 
 $absentStmt->execute([
     $from,
-    $to
+    $to,
+    "%$search%",
+    "%$search%",
+    "%$search%"
 ]);
 
 $absentEmployees =
-$absentStmt->fetchAll();
+    $absentStmt->fetchAll();
 $html = '
 
 <style>
@@ -345,12 +371,12 @@ $html .= '
 
 ';
 
-foreach($absentEmployees as $emp){
+foreach ($absentEmployees as $emp) {
 
     $html .= '
 
     <tr>
-        <td>'.$emp['full_name'].'</td>
+        <td>' . $emp['full_name'] . '</td>
     </tr>
 
     ';

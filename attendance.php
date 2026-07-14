@@ -1137,24 +1137,15 @@ gap:.75rem;
             }
             function exportExcel() {
 
-                const from =
-                    document.getElementById('fromDate').value;
-
-                const to =
-                    document.getElementById('toDate').value;
+                const from = document.getElementById('fromDate').value;
+                const to = document.getElementById('toDate').value;
+                const search = document.getElementById('searchInput').value;
 
                 window.open(
-                    `api/export_excel.php?from=${from}&to=${to}`
+                    `api/export_excel.php?from=${from}&to=${to}&search=${encodeURIComponent(search)}`
                 );
-
             }
-
-
-
-
-
             function resetFilter() {
-
                 window.location =
                     'attendance.php';
 
@@ -1162,14 +1153,12 @@ gap:.75rem;
 
             function exportPDF() {
 
-                const from =
-                    document.getElementById('fromDate').value;
-
-                const to =
-                    document.getElementById('toDate').value;
+                const from = document.getElementById('fromDate').value;
+                const to = document.getElementById('toDate').value;
+                const search = document.getElementById('searchInput').value;
 
                 window.open(
-                    `api/export_pdf.php?from=${from}&to=${to}`
+                    `api/export_pdf.php?from=${from}&to=${to}&search=${encodeURIComponent(search)}`
                 );
 
             }

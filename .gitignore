@@ -1,2 +1,6 @@
 /vendor
 .env
+assets/uploads/photos/
+assets/uploads/documents/
+assets/uploads/visitors/
+assets/uploads/employees/

@@ -3,7 +3,7 @@ require_once 'includes/config.php';
 $pdo = getDB();
 
 $hosts = $pdo->query(
-"
+  "
 SELECT
     id,
     name,
@@ -88,7 +88,7 @@ ORDER BY name ASC
       font-family: var(--font);
       min-height: 100vh;
       display: grid;
-      overflow: hidden;
+      overflow: auto;
       grid-template-rows: auto 1fr auto;
     }
 
@@ -462,7 +462,7 @@ ORDER BY name ASC
 
     /* RIGHT PANEL — Form */
     .right-panel {
-      overflow-y: hidden;
+      overflow-y: auto;
       padding: 2rem;
       display: flex;
       flex-direction: column;
@@ -566,8 +566,9 @@ ORDER BY name ASC
 
     .form-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
       gap: .75rem;
+      align-items: end;
     }
 
     .form-group {
@@ -623,8 +624,19 @@ ORDER BY name ASC
 
     .form-group input:disabled,
     .form-group select:disabled {
-      opacity: .7;
+
+      opacity: 1;
+      color: var(--text);
+
+      background: var(--surface2);
+
+      border: 1.5px solid var(--border);
+
       cursor: not-allowed;
+
+      -webkit-text-fill-color: var(--text);
+      /* Safari/iPad */
+
     }
 
     /* Success screen */
@@ -872,7 +884,7 @@ ORDER BY name ASC
               <label>Full Name <span class="req">*</span></label>
               <input type="text" id="fullName" placeholder="Enter full name">
             </div>
-            
+
             <div class="form-group">
               <label>Email Address</label>
               <input type="email" id="email" placeholder="visitor@email.com">
@@ -881,6 +893,15 @@ ORDER BY name ASC
               <label>Phone <span class="req">*</span></label>
               <input type="tel" id="phoneDisplay" placeholder="+971 50 1234567" maxlength="16"
                 oninput="formatPhone(this)">
+            </div>
+            <div class="form-group full">
+              <label>Identity Document <span class="req">*</span></label>
+
+              <input type="file" id="documentUpload" name="document" accept="image/*" capture="environment">
+
+              <small style="color:var(--muted);font-size:.75rem">
+                Capture or upload the visitor's Emirates ID or any identity document.
+              </small>
             </div>
           </div>
         </div>
@@ -902,9 +923,24 @@ ORDER BY name ASC
                 <option value="__other__">Other (type below)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Department</label>
-              <input type="text" id="hostDept" placeholder="Auto-filled or enter manually">
+            <div class="form-group" id="departmentGroup" style="display:block">
+              <label>Department <span class="req">*</span></label>
+
+              <select id="department" disabled>
+
+                <option value="">Select Department</option>
+
+                <option value="Management">Management</option>
+                <option value="IT Department">IT Department</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Administration">Administration</option>
+
+              </select>
+
             </div>
             <div class="form-group full" id="otherHostGroup" style="display:none">
               <label>Host Name (Other) <span class="req">*</span></label>
@@ -981,6 +1017,8 @@ ORDER BY name ASC
     let blinkVerified = false;
     let eyesClosed = false;
     let inactivityTimer;
+    let faceVerificationPending = false;
+    let faceVerificationFinished = false;
     // Phone input formatting
     function getEAR(eye) {
 
@@ -1041,9 +1079,9 @@ ORDER BY name ASC
       document.getElementById('email').value = '';
       document.getElementById('phoneDisplay').value = '';
       document.getElementById('purpose').value = '';
-      document.getElementById('hostDept').value = '';
+      document.getElementById('department').value = '';
       document.getElementById('otherHost').value = '';
-
+      document.getElementById('documentUpload').value = '';
       document.getElementById('hostSelect').selectedIndex = 0;
 
       document.getElementById('clearBtn').style.display = 'none';
@@ -1093,7 +1131,7 @@ ORDER BY name ASC
 
         }, 800);
 
-      }, 15000);
+      }, 20000);
 
     }
 
@@ -1341,7 +1379,7 @@ ORDER BY name ASC
       document.getElementById('email').value = '';
       document.getElementById('phoneDisplay').value = '';
       document.getElementById('purpose').value = '';
-      document.getElementById('hostDept').value = '';
+      document.getElementById('department').value = '';
       document.getElementById('otherHost').value = '';
       document.getElementById('hostSelect').selectedIndex = 0;
       document.getElementById('otherHostGroup').style.display = 'none';
@@ -1363,6 +1401,13 @@ ORDER BY name ASC
         return;
 
       processingFace = true;
+      faceVerificationPending = true;
+      faceVerificationFinished = false;
+
+      const btn = document.getElementById("submitBtn");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Verifying Face...';
 
       console.log(
         "Canvas:",
@@ -1441,6 +1486,13 @@ ORDER BY name ASC
             processingFace = false;
             pauseScanning = true;
             employeeModalOpen = false;
+            faceVerificationPending = false;
+            faceVerificationFinished = true;
+
+            const btn = document.getElementById("submitBtn");
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Employee Detected...';
 
             fetch(
               'api/employee_attendance.php',
@@ -1575,7 +1627,13 @@ ORDER BY name ASC
               );
 
             }
+            faceVerificationPending = false;
+            faceVerificationFinished = true;
 
+            const btn = document.getElementById("submitBtn");
+
+            btn.disabled = false;
+            btn.innerHTML = "Log New Visit";
             processingFace = false;
 
             return;
@@ -1590,6 +1648,13 @@ ORDER BY name ASC
             "New visitor detected",
             "Welcome. Please fill in your details."
           );
+          faceVerificationPending = false;
+          faceVerificationFinished = true;
+
+          const btn = document.getElementById("submitBtn");
+
+          btn.disabled = false;
+          btn.innerHTML = "Register Visit";
           toggleClearButton();
 
           document.getElementById(
@@ -1612,6 +1677,14 @@ ORDER BY name ASC
           processingFace = false;
 
           pauseScanning = false;
+
+          faceVerificationPending = false;
+          faceVerificationFinished = false;
+
+          const btn = document.getElementById("submitBtn");
+
+          btn.disabled = false;
+          btn.innerHTML = "Register Visit";
 
           showToast(
             'Recognition failed', "Recognition Failed"
@@ -1889,6 +1962,7 @@ ORDER BY name ASC
       document.getElementById('returningLastVisit').textContent = data.last_visit;
 
       document.getElementById('submitBtn').textContent = ' Log New Visit';
+      document.getElementById('documentUpload').closest('.form-group').style.display = 'none';
     }
 
     function resetReturnState() {
@@ -1902,21 +1976,70 @@ ORDER BY name ASC
       document.getElementById('submitBtn').textContent = ' Register Visit';
       document.getElementById('lookupHint').textContent = 'Enter phone number to check if visitor has visited before';
       document.getElementById('lookupHint').className = 'lookup-hint';
+      document.getElementById('documentUpload').closest('.form-group').style.display = '';
     }
 
     // ── Host select ────────────────────────────────────
     function onHostChange() {
-      const sel = document.getElementById('hostSelect');
-      const dept = sel.selectedOptions[0]?.dataset.dept || '';
-      const other = sel.value === '__other__';
 
-      document.getElementById('hostDept').value = other ? '' : dept;
-      document.getElementById('otherHostGroup').style.display = other ? '' : 'none';
-      document.getElementById('otherHost').required = other;
+      const host = document.getElementById('hostSelect');
+      const department = document.getElementById('department');
+
+      const isOther = host.value === "__other__";
+
+      document.getElementById('otherHostGroup').style.display =
+        isOther ? "" : "none";
+
+      document.getElementById('otherHost').required =
+        isOther;
+
+      if (isOther) {
+
+        department.disabled = false;
+        department.required = true;
+        department.selectedIndex = 0;
+
+      } else if (host.value !== "") {
+
+        department.disabled = true;
+        department.required = false;
+
+        const dbDepartment =
+          host.options[host.selectedIndex].dataset.dept;
+
+        department.value = dbDepartment;
+
+      } else {
+
+        department.disabled = true;
+        department.required = false;
+        department.selectedIndex = 0;
+
+      }
+
     }
 
     // ── Submit ─────────────────────────────────────────
     function submitForm() {
+      if (faceVerificationPending) {
+
+        showToast(
+          "Please wait while face verification completes.",
+          "Please wait."
+        );
+
+        return;
+      }
+
+      if (!faceVerificationFinished) {
+
+        showToast(
+          "Please scan your face first.",
+          "Please scan your face."
+        );
+
+        return;
+      }
       const phone = document.getElementById('phoneDisplay').value.trim();
       const name = document.getElementById('fullName').value.trim();
       const hostSel = document.getElementById('hostSelect').value;
@@ -1924,9 +2047,23 @@ ORDER BY name ASC
         ? document.getElementById('otherHost').value.trim()
         : hostSel;
       const purpose = document.getElementById('purpose').value.trim();
+      const email =
+        document.getElementById('email')
+          .value
+          .trim();
 
+      if (
+        email &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ) {
 
+        showToast(
+          "Please enter a valid email address."
+        );
 
+        return;
+
+      }
       const phoneRegex = /^\+971 5[0-6] \d{7}$/;
 
       if (!phoneRegex.test(phone)) {
@@ -1936,15 +2073,56 @@ ORDER BY name ASC
         );
         return;
       }
-      if (!isReturning && !name) { showToast('Please enter the visitor\'s full name'); return; }
+      if (
+        !isReturning &&
+        (
+          name.length < 3 ||
+          !/^[A-Za-z ]+$/.test(name)
+        )
+      ) {
+
+        showToast(
+          "Please enter a valid full name."
+        );
+
+        return;
+
+      }
       if (!hostName) { showToast('Please select or enter who they are meeting'); return; }
+      if (hostSel === "__other__" && !document.getElementById("department").value) {
+        showToast("Please select a department.", "Please select the department.");
+        return;
+      }
+      if (
+        hostSel === "__other__" &&
+        !document.getElementById("otherHost").value.trim()
+      ) {
+
+        showToast(
+          "Please enter the host name.",
+          "Please enter who you are meeting."
+        );
+
+        return;
+
+      }
       if (!purpose) { showToast('Please describe the purpose of the visit'); return; }
       if (!currentFaceDescriptor || currentFaceDescriptor.length !== 128) {
-        showToast("Please scan your face before registering.","Please scan your face.");
+        showToast("Please scan your face before registering.", "Please scan your face.");
         return;
       }
       if (!capturedPhotoData) {
-        showToast("Please capture your photo.","Please capture your photo.");
+        showToast("Please capture your photo.", "Please capture your photo.");
+        return;
+      }
+      const documentFile =
+        document.getElementById('documentUpload').files[0];
+
+      if (!isReturning && !documentFile) {
+        showToast(
+          "Please upload an identity document.",
+          "Please upload the identity document."
+        );
         return;
       }
       const btn = document.getElementById('submitBtn');
@@ -1960,7 +2138,7 @@ ORDER BY name ASC
       );
       fd.append('email', document.getElementById('email').value.trim());
       fd.append('host_name', hostName);
-      fd.append('host_department', document.getElementById('hostDept').value.trim());
+      fd.append('host_department', document.getElementById('department').value);
       fd.append('purpose', purpose);
       if (capturedPhotoData) fd.append('photo_data', capturedPhotoData);
       if (currentFaceDescriptor) {
@@ -1971,8 +2149,9 @@ ORDER BY name ASC
         );
 
       }
-
-
+      if (documentFile) {
+        fd.append("document", documentFile);
+      }
       fetch('api/register_visit.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(data => {
@@ -2075,10 +2254,10 @@ ORDER BY name ASC
       document.getElementById('retakeBtn').style.display = 'none';
 
       capturedPhotoData = null;
-
       currentFaceDescriptor = null;
+      document.getElementById('documentUpload').value = '';
       // Clear all fields
-      ['phoneInput', 'fullName', 'email', 'purpose', 'otherHost', 'hostDept'].forEach(id => {
+      ['phoneInput', 'fullName', 'email', 'purpose', 'otherHost', 'department'].forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.value = ''; el.disabled = false; }
       });
@@ -2091,6 +2270,11 @@ ORDER BY name ASC
       capturedPhotoData = null;
       pauseScanning = false;
       processingFace = false;
+      faceVerificationPending = false;
+      faceVerificationFinished = false;
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = false;
+      btn.innerHTML = "Register Visit";
     }
     document.querySelectorAll(
       'input, textarea, select'

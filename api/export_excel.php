@@ -53,6 +53,8 @@ date('Y-m-01');
 $to =
 $_GET['to'] ??
 date('Y-m-d');
+$search =
+trim($_GET['search'] ?? '');
 
 $stmt = $pdo->prepare("
 
@@ -81,6 +83,15 @@ ON ea.employee_id=e.id
 
 WHERE DATE(ea.check_in)
 BETWEEN ? AND ?
+AND (
+
+e.full_name LIKE ?
+
+OR e.department LIKE ?
+
+OR e.designation LIKE ?
+
+)
 
 ORDER BY
 ea.attendance_date DESC,
@@ -90,7 +101,10 @@ ea.check_in DESC
 
 $stmt->execute([
     $from,
-    $to
+    $to,
+    "%$search%",
+    "%$search%",
+    "%$search%"
 ]);
 
 while(

@@ -15,21 +15,90 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-define(
-    'UPLOAD_DIR',
-    __DIR__ . '/../assets/uploads/photos/'
-);
+/*
+|--------------------------------------------------------------------------
+| Storage Paths
+|--------------------------------------------------------------------------
+|
+| Local (XAMPP):
+|   assets/uploads/
+|
+| Railway:
+|   /data/storage/
+|
+*/
 
-define(
-    'UPLOAD_URL',
-    'assets/uploads/photos/'
-);
+if (is_dir('/data/storage')) {
 
+    define('STORAGE_ROOT', '/data/storage/');
+    define('UPLOAD_URL', 'storage/');
+
+} else {
+
+    define(
+        'STORAGE_ROOT',
+        __DIR__ . '/../assets/uploads/'
+    );
+
+    define(
+        'UPLOAD_URL',
+        'assets/uploads/'
+    );
+
+}
 define(
     'BASE_URL',
     $_ENV['BASE_URL'] ?? 'http://localhost/visitor_system/'
 );
+/*
+|--------------------------------------------------------------------------
+| Visitor Storage
+|--------------------------------------------------------------------------
+*/
 
+define(
+    'VISITOR_PHOTO_DIR',
+    STORAGE_ROOT . 'visitors/photos/'
+);
+
+define(
+    'VISITOR_DOCUMENT_DIR',
+    STORAGE_ROOT . 'visitors/documents/'
+);
+
+/*
+|--------------------------------------------------------------------------
+| Employee Storage
+|--------------------------------------------------------------------------
+*/
+
+define(
+    'EMPLOYEE_PHOTO_DIR',
+    STORAGE_ROOT . 'employees/photos/'
+);
+
+define(
+    'EMPLOYEE_DOCUMENT_DIR',
+    STORAGE_ROOT . 'employees/documents/'
+);
+$directories = [
+
+    VISITOR_PHOTO_DIR,
+    VISITOR_DOCUMENT_DIR,
+    EMPLOYEE_PHOTO_DIR,
+    EMPLOYEE_DOCUMENT_DIR
+
+];
+
+foreach ($directories as $dir) {
+
+    if (!is_dir($dir)) {
+
+        mkdir($dir, 0755, true);
+
+    }
+
+}
 function getDB()
 {
     static $pdo = null;
@@ -52,21 +121,19 @@ function getDB()
                 [
 
                     PDO::ATTR_ERRMODE =>
-                    PDO::ERRMODE_EXCEPTION,
+                        PDO::ERRMODE_EXCEPTION,
 
                     PDO::ATTR_DEFAULT_FETCH_MODE =>
-                    PDO::FETCH_ASSOC,
+                        PDO::FETCH_ASSOC,
 
                     PDO::ATTR_EMULATE_PREPARES =>
-                    false
+                        false
 
                 ]
 
             );
             $pdo->exec("SET time_zone = '+04:00'");
-        }
-
-        catch(PDOException $e){
+        } catch (PDOException $e) {
 
             die(
                 "Database connection failed: "
