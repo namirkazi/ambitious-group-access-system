@@ -300,124 +300,124 @@ try {
 
     }
 
-/*
-|--------------------------------------------------------------------------
-| Compress & Save Visitor Document
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | Compress & Save Visitor Document
+    |--------------------------------------------------------------------------
+    */
 
-if (
-    empty($document_path) &&
-    isset($_FILES['document']) &&
-    $_FILES['document']['error'] === UPLOAD_ERR_OK
-) {
+    if (
+        empty($document_path) &&
+        isset($_FILES['document']) &&
+        $_FILES['document']['error'] === UPLOAD_ERR_OK
+    ) {
 
-    $tmp = $_FILES['document']['tmp_name'];
+        $tmp = $_FILES['document']['tmp_name'];
 
-    $info = getimagesize($tmp);
+        $info = getimagesize($tmp);
 
-    if (!$info) {
-        throw new Exception("Invalid identity document.");
-    }
+        if (!$info) {
+            throw new Exception("Invalid identity document.");
+        }
 
-    switch ($info['mime']) {
+        switch ($info['mime']) {
 
-        case 'image/jpeg':
-            $image = imagecreatefromjpeg($tmp);
-            break;
+            case 'image/jpeg':
+                $image = imagecreatefromjpeg($tmp);
+                break;
 
-        case 'image/png':
-            $image = imagecreatefrompng($tmp);
-            break;
+            case 'image/png':
+                $image = imagecreatefrompng($tmp);
+                break;
 
-        case 'image/webp':
-            $image = imagecreatefromwebp($tmp);
-            break;
+            case 'image/webp':
+                $image = imagecreatefromwebp($tmp);
+                break;
 
-        default:
-            throw new Exception("Unsupported image format.");
-    }
+            default:
+                throw new Exception("Unsupported image format.");
+        }
 
-    // -----------------------------------
-    // Fix phone orientation (EXIF)
-    // -----------------------------------
+        // -----------------------------------
+        // Fix phone orientation (EXIF)
+        // -----------------------------------
 
-    if ($info['mime'] === 'image/jpeg' && function_exists('exif_read_data')) {
+        if ($info['mime'] === 'image/jpeg' && function_exists('exif_read_data')) {
 
-        $exif = @exif_read_data($tmp);
+            $exif = @exif_read_data($tmp);
 
-        if (!empty($exif['Orientation'])) {
+            if (!empty($exif['Orientation'])) {
 
-            switch ($exif['Orientation']) {
+                switch ($exif['Orientation']) {
 
-                case 3:
-                    $image = imagerotate($image, 180, 0);
-                    break;
+                    case 3:
+                        $image = imagerotate($image, 180, 0);
+                        break;
 
-                case 6:
-                    $image = imagerotate($image, -90, 0);
-                    break;
+                    case 6:
+                        $image = imagerotate($image, -90, 0);
+                        break;
 
-                case 8:
-                    $image = imagerotate($image, 90, 0);
-                    break;
+                    case 8:
+                        $image = imagerotate($image, 90, 0);
+                        break;
+
+                }
 
             }
 
         }
 
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        $maxWidth = 900;
+
+        if ($width > $maxWidth) {
+
+            $newWidth = $maxWidth;
+            $newHeight = intval(($height / $width) * $newWidth);
+
+        } else {
+
+            $newWidth = $width;
+            $newHeight = $height;
+
+        }
+
+        $resized = imagecreatetruecolor(
+            $newWidth,
+            $newHeight
+        );
+
+        imagecopyresampled(
+            $resized,
+            $image,
+            0,
+            0,
+            0,
+            0,
+            $newWidth,
+            $newHeight,
+            $width,
+            $height
+        );
+
+        $documentFilename = $baseFilename . ".jpg";
+
+        imagejpeg(
+            $resized,
+            VISITOR_DOCUMENT_DIR . $documentFilename,
+            65
+        );
+
+        imagedestroy($image);
+        imagedestroy($resized);
+
+        $document_path =
+            'visitors/documents/' .
+            $documentFilename;
     }
-
-    $width = imagesx($image);
-    $height = imagesy($image);
-
-    $maxWidth = 900;
-
-    if ($width > $maxWidth) {
-
-        $newWidth = $maxWidth;
-        $newHeight = intval(($height / $width) * $newWidth);
-
-    } else {
-
-        $newWidth = $width;
-        $newHeight = $height;
-
-    }
-
-    $resized = imagecreatetruecolor(
-        $newWidth,
-        $newHeight
-    );
-
-    imagecopyresampled(
-        $resized,
-        $image,
-        0,
-        0,
-        0,
-        0,
-        $newWidth,
-        $newHeight,
-        $width,
-        $height
-    );
-
-    $documentFilename = $baseFilename . ".jpg";
-
-    imagejpeg(
-        $resized,
-        VISITOR_DOCUMENT_DIR . $documentFilename,
-        65
-    );
-
-    imagedestroy($image);
-    imagedestroy($resized);
-
-    $document_path =
-        'visitors/documents/' .
-        $documentFilename;
-}
     /*
     |--------------------------------------------------------------------------
     | Update Visitor Record
@@ -511,6 +511,21 @@ if (
     ]);
 
 } catch (Exception $e) {
-    $pdo->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    if (!empty($photo_path)) {
+        @unlink(VISITOR_PHOTO_DIR . basename($photo_path));
+    }
+
+    if (!empty($document_path)) {
+        @unlink(VISITOR_DOCUMENT_DIR . basename($document_path));
+    }
+
+    echo json_encode([
+        "success" => false,
+        "message" => $e->getMessage()
+    ]);
 }
