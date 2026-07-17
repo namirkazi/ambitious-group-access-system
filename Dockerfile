@@ -22,4 +22,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t ."]
+CMD ["sh", "-c", "mkdir -p /data/storage && ln -sfn /data/storage ./storage && php -S 0.0.0.0:${PORT:-8080} -t ."]

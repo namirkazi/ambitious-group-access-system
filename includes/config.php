@@ -34,7 +34,7 @@ define(
 if (is_dir('/data/storage')) {
 
     define('STORAGE_ROOT', '/data/storage/');
-    define('UPLOAD_URL', '/data/storage/');
+    define('UPLOAD_URL', 'storage/');
 
 } else {
 

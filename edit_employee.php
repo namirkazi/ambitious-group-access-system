@@ -946,7 +946,7 @@ if (!$employee) {
             <form action="api/update_employee.php" method="POST" enctype="multipart/form-data"
                 onsubmit="return validateForm()">
 
-                <input type="hidden" name="id" value="<?= $employee['id'] ?>">
+                <input type="hidden" name="id" value="<?= $employee['id'] ?? ''?>">
                 <input type="hidden" name="photo_data" id="photoData">
                 <input type="hidden" name="face_descriptor" id="faceDescriptor">
                 <div class="employee-profile">
@@ -1124,7 +1124,7 @@ if (!$employee) {
 
                                     <label>Date of Birth</label>
 
-                                    <input type="date" name="dob" value="<?= $employee['dob'] ?>">
+                                    <input type="date" name="dob" value="<?= $employee['dob'] ?? ''?>">
 
                                 </div>
 
@@ -1156,7 +1156,8 @@ if (!$employee) {
                                     <label>Mobile Number</label>
 
                                     <input type="tel" id="phone" name="phone" maxlength="16"
-                                        value="<?= htmlspecialchars($employee['phone'] ?? '') ?>" oninput="formatPhone(this)">
+                                        value="<?= htmlspecialchars($employee['phone'] ?? '') ?>"
+                                        oninput="formatPhone(this)">
 
                                 </div>
 
@@ -1187,7 +1188,8 @@ if (!$employee) {
 
                                     <label>Joining Date</label>
 
-                                    <input type="date" name="joining_date" value="<?= $employee['joining_date'] ?>">
+                                    <input type="date" name="joining_date"
+                                        value="<?= $employee['joining_date'] ?? '' ?>">
 
                                 </div>
 
