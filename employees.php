@@ -2,9 +2,9 @@
 
 session_start();
 
-if(
-!isset($_SESSION['admin_logged_in'])
-){
+if (
+    !isset($_SESSION['admin_logged_in'])
+) {
 
     header("Location: login.php");
 
@@ -12,7 +12,7 @@ if(
 
 }
 
-if($_SESSION['role']!='hr'){
+if ($_SESSION['role'] != 'hr') {
 
     header("Location: admin.php");
 
@@ -38,25 +38,15 @@ ORDER BY id ASC
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard — Visitor Management</title>
-    <link rel="apple-touch-icon"
-sizes="180x180"
-href="assets/favicon/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
 
-<link rel="icon"
-type="image/png"
-sizes="32x32"
-href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
 
-<link rel="icon"
-type="image/png"
-sizes="16x16"
-href="assets/favicon/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
 
-<link rel="icon"
-href="assets/favicon/favicon.ico">
+    <link rel="icon" href="assets/favicon/favicon.ico">
 
-<link rel="manifest"
-href="assets/favicon/site.webmanifest">
+    <link rel="manifest" href="assets/favicon/site.webmanifest">
     <style>
         #toast {
 
@@ -161,43 +151,43 @@ href="assets/favicon/site.webmanifest">
         }
 
         header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-    header .logo {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-    }
+        header .logo {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
 
-    header .logo svg {
-      color: var(--accent2);
-    }
+        header .logo svg {
+            color: var(--accent2);
+        }
 
-    header h1 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -.02em;
-    }
+        header h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
 
-    header h1 span {
-      color: var(--accent2);
-    }
+        header h1 span {
+            color: var(--accent2);
+        }
 
-    header a {
-      background: var(--accent);
-      color: #fff;
-      padding: .5rem 1.2rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: .875rem;
-      font-weight: 600;
-    }
+        header a {
+            background: var(--accent);
+            color: #fff;
+            padding: .5rem 1.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: .875rem;
+            font-weight: 600;
+        }
 
 
         .container {
@@ -502,33 +492,33 @@ href="assets/favicon/site.webmanifest">
 <body>
 
     <header>
-    <div class="logo">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-      <h1>Ambitious<span>Group</span> — Employees</h1>
-    </div>
-    <div style="
+        <div class="logo">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <h1>Ambitious<span>Group</span> — Employees</h1>
+        </div>
+        <div style="
 display:flex;
 gap:.75rem;
 ">
 
-     <a href="attendance.php">
+            <a href="attendance.php">
 
-            Attendance History
+                Attendance History
 
-        </a>
-      <a href="logout.php">
+            </a>
+            <a href="logout.php">
 
-        ⏻ Logout
+                ⏻ Logout
 
-      </a>
+            </a>
 
-    </div>
-  </header>
+        </div>
+    </header>
 
     <div class="container">
         <?php
@@ -661,7 +651,7 @@ AND e.active = 1
 
                                     <?php if (!empty($emp['photo_path'])): ?>
 
-                                        <img src="<?= htmlspecialchars($emp['photo_path']) ?>" class="avatar">
+                                        <img src="<?= UPLOAD_URL . htmlspecialchars($emp['photo_path']) ?>" class="avatar">
 
                                     <?php else: ?>
 
@@ -712,7 +702,7 @@ AND e.active = 1
                                 <button class="checkout-btn"
                                     onclick="window.location='edit_employee.php?id=<?= $emp['id'] ?>'">
 
-                                Edit
+                                    Edit
 
                                 </button>
 
@@ -732,22 +722,22 @@ AND e.active = 1
 
                 </tbody>
             </table>
-            <script>function confirmDelete(id){
+            <script>function confirmDelete(id) {
 
-    if(
+                    if (
 
-        confirm(
-'Are you sure you want to delete this employee?\n\nThis employee will be hidden but attendance records will be preserved.'
-)
+                        confirm(
+                            'Are you sure you want to delete this employee?\n\nThis employee will be hidden but attendance records will be preserved.'
+                        )
 
-    ){
+                    ) {
 
-        window.location =
-        'api/delete_employee.php?id='
-        +
-        id;
+                        window.location =
+                            'api/delete_employee.php?id='
+                            +
+                            id;
 
-    }
+                    }
 
-}</script>
+                }</script>
         </div>

@@ -14,7 +14,10 @@ date_default_timezone_set('Asia/Dubai');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
+define(
+    'SITE_CODE',
+    $_COOKIE['site_code'] ?? null
+);
 /*
 |--------------------------------------------------------------------------
 | Storage Paths

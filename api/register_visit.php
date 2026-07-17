@@ -447,12 +447,17 @@ try {
         $visitor_id
     ]);
     // Get first available visitor card
-    $stmt = $pdo->query("
+    $stmt = $pdo->prepare("
     SELECT card_number
     FROM visitor_cards
-    WHERE status='available'
+    WHERE
+        status = 'available'
+        AND site_code = ?
+    ORDER BY card_number ASC
     LIMIT 1
 ");
+
+    $stmt->execute([SITE_CODE]);
 
     $card = $stmt->fetch();
 
@@ -485,9 +490,10 @@ try {
         host_name,
         host_department,
         purpose,
-        card_number
+        card_number,
+        site_code
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
 ");
 
     $stmt->execute([
@@ -495,7 +501,8 @@ try {
         $host_name,
         $host_dept,
         $purpose,
-        $card_number
+        $card_number,
+        SITE_CODE
     ]);
 
     $log_id = $pdo->lastInsertId();

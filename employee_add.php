@@ -2,9 +2,9 @@
 
 session_start();
 
-if(
-!isset($_SESSION['admin_logged_in'])
-){
+if (
+    !isset($_SESSION['admin_logged_in'])
+) {
 
     header("Location: login.php");
 
@@ -12,7 +12,7 @@ if(
 
 }
 
-if($_SESSION['role']!='hr'){
+if ($_SESSION['role'] != 'hr') {
 
     header("Location: admin.php");
 
@@ -32,25 +32,15 @@ $pdo = getDB();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Registration</title>
-    <link rel="apple-touch-icon"
-sizes="180x180"
-href="assets/favicon/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
 
-<link rel="icon"
-type="image/png"
-sizes="32x32"
-href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
 
-<link rel="icon"
-type="image/png"
-sizes="16x16"
-href="assets/favicon/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
 
-<link rel="icon"
-href="assets/favicon/favicon.ico">
+    <link rel="icon" href="assets/favicon/favicon.ico">
 
-<link rel="manifest"
-href="assets/favicon/site.webmanifest">
+    <link rel="manifest" href="assets/favicon/site.webmanifest">
     <meta name="theme-color" content="#6c63ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -76,6 +66,7 @@ href="assets/favicon/site.webmanifest">
             z-index: 2000;
 
         }
+
         header a {
             background: var(--accent);
             color: #fff;
@@ -85,6 +76,7 @@ href="assets/favicon/site.webmanifest">
             font-size: .875rem;
             font-weight: 600;
         }
+
         :root {
             --bg: #0f1117;
             --surface: #1a1d27;
@@ -350,7 +342,7 @@ href="assets/favicon/site.webmanifest">
         /* RIGHT PANEL — Form */
         .right-panel {
             overflow-y: auto;
-            padding: 2rem;
+            padding: 0.7rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -574,11 +566,11 @@ href="assets/favicon/site.webmanifest">
             <h1>Ambitious Group</h1>
         </div>
         <div class="header-right">
-                    <a href="attendance.php">
+            <a href="employees.php">
 
-            ←  Back
+                ← Back
 
-        </a>
+            </a>
             <div class="clock" id="clock"></div>
         </div>
     </header>
@@ -643,6 +635,107 @@ href="assets/favicon/site.webmanifest">
                             <input type="text" id="fullName" maxlength="100" pattern="[A-Za-z ]+"
                                 placeholder="Ahmed Al Rashid">
                         </div>
+                        <div class="form-group">
+
+                            <label>Identity Document</label>
+
+                            <select id="documentType" name="document_type" required>
+
+                                <option value="Emirates ID">
+                                    Emirates ID
+                                </option>
+
+                                <option value="Passport">
+                                    Passport
+                                </option>
+
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+
+                            <label id="documentNumberLabel">
+
+                                Document Number
+
+                            </label>
+
+                            <input type="text" id="documentNumber" placeholder="Document Number" name="document_number"
+                                required>
+
+                        </div>
+                        <div class="form-group">
+
+                            <label>Legal Name As Per Document</label>
+
+                            <input type="text" id="legalName" maxlength="255" placeholder="As printed on Document">
+
+                        </div>
+                        <div class="form-group">
+
+                            <label>Gender</label>
+
+                            <select id="gender">
+
+                                <option value="">Select Gender</option>
+
+                                <option value="Male">Male</option>
+
+                                <option value="Female">Female</option>
+
+                                <option value="Other">Other</option>
+
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+
+                            <label>Date of Birth</label>
+
+                            <input type="date" id="dob">
+
+                        </div>
+                        <div class="form-group">
+
+                            <label>Nationality</label>
+
+                            <input type="text" id="nationality" maxlength="100">
+
+                        </div>
+                        <div class="form-group">
+
+                            <label>
+
+                                Issue Date
+
+                            </label>
+
+                            <input type="date" id="documentIssueDate" name="document_issue_date" required>
+
+                        </div>
+                        <div class="form-group">
+
+                            <label>
+
+                                Expiry Date
+
+                            </label>
+
+                            <input type="date" id="documentExpiryDate" name="document_expiry_date" required>
+
+                        </div>
+                        <div class="form-group">
+
+                            <label id="uploadLabel">
+
+                                Upload Document
+
+                            </label>
+
+                            <input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png" capture="environment"
+                                required>
+
+                        </div>
 
                         <div class="form-group">
                             <label>Phone</label>
@@ -681,6 +774,13 @@ href="assets/favicon/site.webmanifest">
                         <div class="form-group">
                             <label>Designation</label>
                             <input type="text" id="designation">
+                        </div>
+                        <div class="form-group">
+
+                            <label>Joining Date</label>
+
+                            <input type="date" id="joiningDate">
+
                         </div>
 
                     </div>
@@ -723,7 +823,63 @@ href="assets/favicon/site.webmanifest">
         let pauseScanning = false;
 
 
+        const documentType =
+            document.getElementById(
+                "documentType"
+            );
 
+        const documentLabel =
+            document.getElementById(
+                "documentNumberLabel"
+            );
+
+        const uploadLabel =
+            document.getElementById(
+                "uploadLabel"
+            );
+
+        documentType.addEventListener(
+            "change",
+            function () {
+
+                if (
+                    this.value ===
+                    "Passport"
+                ) {
+
+                    documentLabel.innerText =
+                        "Passport Number";
+
+                    uploadLabel.innerText =
+                        "Upload Passport";
+
+                }
+
+                else if (
+                    this.value ===
+                    "Emirates ID"
+                ) {
+
+                    documentLabel.innerText =
+                        "Emirates ID Number";
+
+                    uploadLabel.innerText =
+                        "Upload Emirates ID";
+
+                }
+
+                else {
+
+                    documentLabel.innerText =
+                        "Document Number";
+
+                    uploadLabel.innerText =
+                        "Upload Document";
+
+                }
+
+            }
+        );
         // Phone input formatting
 
         function formatPhone(input) {
@@ -925,57 +1081,135 @@ href="assets/favicon/site.webmanifest">
             processingFace = false;
 
         }
-        async function extractFaceDescriptor(){
+        async function extractFaceDescriptor() {
 
-    const img = document.getElementById(
-        'capturedPhoto'
-    );
+            const img = document.getElementById(
+                'capturedPhoto'
+            );
 
-    const detection =
-        await faceapi
-            .detectSingleFace(
-                img,
-                new faceapi.TinyFaceDetectorOptions({
+            const detection =
+                await faceapi
+                    .detectSingleFace(
+                        img,
+                        new faceapi.TinyFaceDetectorOptions({
 
-                    inputSize:512,
+                            inputSize: 512,
 
-                    scoreThreshold:0.2
+                            scoreThreshold: 0.2
 
-                })
-            )
-            .withFaceLandmarks()
-            .withFaceDescriptor();
+                        })
+                    )
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
 
-    if(!detection){
+            if (!detection) {
 
-        showToast(
-            'Face not detected'
-        );
+                showToast(
+                    'Face not detected'
+                );
 
-        setTimeout(
-            retakePhoto,
-            1000
-        );
+                setTimeout(
+                    retakePhoto,
+                    1000
+                );
 
-        return;
+                return;
 
-    }
+            }
 
-    currentFaceDescriptor =
-        Array.from(
-            detection.descriptor
-        );
+            currentFaceDescriptor =
+                Array.from(
+                    detection.descriptor
+                );
 
-    console.log(
-        currentFaceDescriptor.length
-    );
+            console.log(
+                currentFaceDescriptor.length
+            );
 
-}
+        }
 
         // ── Submit ─────────────────────────────────────────
         const nameRegex =
             /^[A-Za-z ]{3,100}$/;
         function submitForm() {
+            const legalName =
+                document
+                    .getElementById(
+                        'legalName'
+                    )
+                    .value
+                    .trim();
+
+            if (
+                legalName.length < 3
+            ) {
+
+                showToast(
+                    "Enter legal name"
+                );
+
+                return;
+
+            }
+            const gender =
+                document.getElementById(
+                    'gender'
+                ).value;
+
+            if (!gender) {
+
+                showToast(
+                    'Select gender'
+                );
+
+                return;
+
+            }
+            const dob =
+                document.getElementById(
+                    'dob'
+                ).value;
+
+            if (!dob) {
+
+                showToast(
+                    'Select date of birth'
+                );
+
+                return;
+
+            }
+            const nationality =
+                document.getElementById(
+                    'nationality'
+                ).value
+                    .trim();
+
+            if (
+                nationality.length < 2
+            ) {
+
+                showToast(
+                    'Enter nationality'
+                );
+
+                return;
+
+            }
+            const joiningDate =
+                document.getElementById(
+                    'joiningDate'
+                ).value;
+
+            if (!joiningDate) {
+
+                showToast(
+                    'Select joining date'
+                );
+
+                return;
+
+            }
             const title =
                 document.getElementById(
                     'title'
@@ -1121,6 +1355,38 @@ href="assets/favicon/site.webmanifest">
                 document.getElementById(
                     'department'
                 ).value.trim()
+            );
+            fd.append("document_type", document.getElementById("documentType").value);
+            fd.append("document_number", document.getElementById("documentNumber").value);
+            fd.append("document_issue_date", document.getElementById("documentIssueDate").value);
+            fd.append("document_expiry_date", document.getElementById("documentExpiryDate").value);
+            fd.append(
+                "document",
+                document.getElementById("documentUpload").files[0]
+            );
+            fd.append(
+                'legal_name',
+                legalName
+            );
+
+            fd.append(
+                'gender',
+                gender
+            );
+
+            fd.append(
+                'dob',
+                dob
+            );
+
+            fd.append(
+                'nationality',
+                nationality
+            );
+
+            fd.append(
+                'joining_date',
+                joiningDate
             );
             if (capturedPhotoData) fd.append('photo_data', capturedPhotoData);
             if (currentFaceDescriptor) {

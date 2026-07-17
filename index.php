@@ -1,6 +1,20 @@
 <?php
 require_once 'includes/config.php';
 require_once 'api/release_cards.php';
+if (!SITE_CODE) {
+  die("
+        <h2>Kiosk Not Configured</h2>
+
+        <p>
+            This reception kiosk has not been assigned
+            to a location.
+        </p>
+
+        <p>
+            Please contact your administrator.
+        </p>
+    ");
+}
 $pdo = getDB();
 
 $hosts = $pdo->query(
@@ -597,6 +611,12 @@ ORDER BY name ASC
     .form-group input,
     .form-group select,
     .form-group textarea {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+
+      box-sizing: border-box;
+
       background: var(--surface2);
       border: 1.5px solid var(--border);
       color: var(--text);

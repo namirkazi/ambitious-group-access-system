@@ -901,7 +901,7 @@ gap:.75rem;
 
                                     <?php if (!empty($row['photo_path'])): ?>
 
-                                        <img src="<?= htmlspecialchars($row['photo_path']) ?>" class="avatar">
+                                        <img src="<?= UPLOAD_URL . htmlspecialchars($row['photo_path']) ?>" class="avatar">
 
                                     <?php else: ?>
 
