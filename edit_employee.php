@@ -1085,7 +1085,7 @@ if (!$employee) {
                                     <label>Full Name</label>
 
                                     <input type="text" name="full_name"
-                                        value="<?= htmlspecialchars($employee['full_name']) ?>">
+                                        value="<?= htmlspecialchars($employee['full_name'] ?? '') ?>">
 
                                 </div>
 
@@ -1094,7 +1094,7 @@ if (!$employee) {
                                     <label>Legal Name</label>
 
                                     <input type="text" name="legal_name"
-                                        value="<?= htmlspecialchars($employee['legal_name']) ?>">
+                                        value="<?= htmlspecialchars($employee['legal_name'] ?? '') ?>">
 
                                 </div>
 
@@ -1133,7 +1133,7 @@ if (!$employee) {
                                     <label>Nationality</label>
 
                                     <input type="text" name="nationality"
-                                        value="<?= htmlspecialchars($employee['nationality']) ?>">
+                                        value="<?= htmlspecialchars($employee['nationality'] ?? '') ?>">
 
                                 </div>
 
@@ -1156,7 +1156,7 @@ if (!$employee) {
                                     <label>Mobile Number</label>
 
                                     <input type="tel" id="phone" name="phone" maxlength="16"
-                                        value="<?= htmlspecialchars($employee['phone']) ?>" oninput="formatPhone(this)">
+                                        value="<?= htmlspecialchars($employee['phone'] ?? '') ?>" oninput="formatPhone(this)">
 
                                 </div>
 
@@ -1165,7 +1165,7 @@ if (!$employee) {
                                     <label>Email Address</label>
 
                                     <input type="email" name="email"
-                                        value="<?= htmlspecialchars($employee['email']) ?>">
+                                        value="<?= htmlspecialchars($employee['email'] ?? '') ?>">
 
                                 </div>
 
@@ -1196,7 +1196,7 @@ if (!$employee) {
                                     <label>Department</label>
 
                                     <input type="text" name="department"
-                                        value="<?= htmlspecialchars($employee['department']) ?>">
+                                        value="<?= htmlspecialchars($employee['department'] ?? '') ?>">
 
                                 </div>
 
@@ -1205,7 +1205,7 @@ if (!$employee) {
                                     <label>Designation</label>
 
                                     <input type="text" name="designation"
-                                        value="<?= htmlspecialchars($employee['designation']) ?>">
+                                        value="<?= htmlspecialchars($employee['designation'] ?? '') ?>">
 
                                 </div>
 
@@ -1262,7 +1262,7 @@ if (!$employee) {
                                     </label>
 
                                     <input type="text" id="documentNumber" name="document_number"
-                                        value="<?= htmlspecialchars($employee['document_number']) ?? '-' ?>">
+                                        value="<?= htmlspecialchars($employee['document_number'] ?? '') ?>">
 
                                 </div>
 
