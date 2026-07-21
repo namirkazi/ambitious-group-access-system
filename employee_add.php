@@ -732,8 +732,8 @@ $pdo = getDB();
 
                             </label>
 
-                            <input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png" capture="environment"
-                                required>
+                            <input type="file" id="documentUpload" name="document" accept=".pdf,.jpg,.jpeg,.png"
+                                capture="environment" required>
 
                         </div>
 
