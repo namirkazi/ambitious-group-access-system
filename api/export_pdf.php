@@ -76,11 +76,11 @@ a.check_out,
 a.total_hours
 
 FROM employee_attendance a
-
 JOIN employees e
 ON a.employee_id=e.id
 
-WHERE DATE(a.check_in)
+WHERE e.active = 1
+AND DATE(a.check_in)
 BETWEEN ? AND ?
 AND (
 
@@ -124,7 +124,7 @@ $completed = $totalAttendanceRecords - $present;
 // Total registered employees
 $totalEmployees =
     $pdo->query(
-        "SELECT COUNT(*) FROM employees"
+        "SELECT COUNT(*) FROM employees WHERE active = 1"
     )->fetchColumn();
 
 $absent =
@@ -133,7 +133,8 @@ $absent =
 $absentStmt = $pdo->prepare("
 SELECT e.full_name
 FROM employees e
-WHERE e.id NOT IN (
+WHERE e.active = 1
+AND e.id NOT IN (
 
     SELECT DISTINCT employee_id
 

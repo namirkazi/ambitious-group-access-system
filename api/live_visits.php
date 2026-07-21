@@ -32,8 +32,8 @@ foreach ($all_visits as $v) {
     if ($v['photo_path']) {
 
         $html .= '<img class="avatar" src="' .
-            htmlspecialchars($v['photo_path']) .
-            '" alt="">';
+    htmlspecialchars(UPLOAD_URL . $v['photo_path']) .
+    '" alt="">';
 
     } else {
 

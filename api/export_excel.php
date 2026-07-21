@@ -77,11 +77,11 @@ ea.check_out,
 ea.total_hours
 
 FROM employee_attendance ea
-
 JOIN employees e
 ON ea.employee_id=e.id
 
-WHERE DATE(ea.check_in)
+WHERE e.active = 1
+AND DATE(ea.check_in)
 BETWEEN ? AND ?
 AND (
 
