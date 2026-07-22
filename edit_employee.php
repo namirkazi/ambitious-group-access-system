@@ -1714,7 +1714,7 @@ if (!$employee) {
 
             const phone = document.getElementById("phone");
 
-            const regex = /^\+971 5[0-6] \d{7}$/;
+            const regex = /^\+971 5[0-9] \d{7}$/;
 
             if (!regex.test(phone.value)) {
 

@@ -2085,7 +2085,7 @@ ORDER BY name ASC
         return;
 
       }
-      const phoneRegex = /^\+971 5[0-6] \d{7}$/;
+      const phoneRegex = /^\+971 5[0-9] \d{7}$/;
 
       if (!phoneRegex.test(phone)) {
 
