@@ -1292,7 +1292,7 @@ $pdo = getDB();
                 ).value.trim();
 
             const phoneRegex =
-                /^\+971 5[0-9] \d{7}$/;
+                /^\+971 \d{2} \d{7}$/;
 
             if (!phoneRegex.test(phone)) {
 

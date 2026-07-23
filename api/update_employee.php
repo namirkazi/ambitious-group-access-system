@@ -61,7 +61,7 @@ try {
     if ($fullName == '')
         throw new Exception("Full name is required.");
 
-    if (!preg_match('/^\+971 5[0-6] \d{7}$/', $phone)) {
+    if (!preg_match('/^\+971 \d{2} \d{7}$/', $phone)) {
 
         throw new Exception("Invalid UAE mobile number.");
 
