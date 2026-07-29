@@ -9,7 +9,6 @@ if (
     header("Location: login.php");
 
     exit();
-
 }
 
 if ($_SESSION['role'] != 'hr') {
@@ -17,7 +16,6 @@ if ($_SESSION['role'] != 'hr') {
     header("Location: admin.php");
 
     exit();
-
 }
 
 require_once 'includes/config.php';
@@ -698,7 +696,12 @@ AND e.active = 1
                             </td>
 
                             <td>
+                                <button class="checkout-btn"
+                                    onclick="window.location='view_employee.php?id=<?= $emp['id'] ?>'">
 
+                                    View
+
+                                </button>
                                 <button class="checkout-btn"
                                     onclick="window.location='edit_employee.php?id=<?= $emp['id'] ?>'">
 
@@ -722,7 +725,8 @@ AND e.active = 1
 
                 </tbody>
             </table>
-            <script>function confirmDelete(id) {
+            <script>
+                function confirmDelete(id) {
 
                     if (
 
@@ -733,11 +737,11 @@ AND e.active = 1
                     ) {
 
                         window.location =
-                            'api/delete_employee.php?id='
-                            +
+                            'api/delete_employee.php?id=' +
                             id;
 
                     }
 
-                }</script>
+                }
+            </script>
         </div>
