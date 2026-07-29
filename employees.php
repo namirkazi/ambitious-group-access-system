@@ -66,6 +66,12 @@ ORDER BY id ASC
 
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
         .modal-overlay {
 
             position: fixed;
@@ -603,12 +609,15 @@ AND e.active = 1
 
                 </h2>
 
-                <a class="checkout-btn" href="employee_add.php">
+                <div class="header-actions">
+                    <a class="checkout-btn" href="employee_add.php">
+                        + Add Employee
+                    </a>
 
-                    + Add Employee
-
-                </a>
-
+                    <a class="checkout-btn" href="api/export_employees.php">
+                        Export Employees
+                    </a>
+                </div>
             </div>
 
             <table>
