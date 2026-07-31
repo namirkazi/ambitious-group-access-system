@@ -18,111 +18,75 @@ if (
 }
 
 require_once '../includes/config.php';
-
+require_once '../includes/attendance_report.php';
 $pdo = getDB();
 
 header(
-'Content-Type: text/csv'
+    'Content-Type: text/csv'
 );
 
 header(
-'Content-Disposition: attachment; filename="attendance_report.csv"'
+    'Content-Disposition: attachment; filename="attendance_report.csv"'
 );
 
 $output = fopen(
-'php://output',
-'w'
+    'php://output',
+    'w'
 );
 
-fputcsv(
-$output,
-[
-'Employee',
-'Department',
-'Date',
-'Check In',
-'Check Out',
-'Hours Worked'
-]
-);
-
-$from =
-$_GET['from'] ??
-date('Y-m-01');
-
-$to =
-$_GET['to'] ??
-date('Y-m-d');
-$search =
-trim($_GET['search'] ?? '');
-
-$stmt = $pdo->prepare("
-
-SELECT
-
-CONCAT(
-e.title,
-' ',
-e.full_name
-) AS employee_name,
-
-e.department,
-
-ea.attendance_date,
-
-ea.check_in,
-
-ea.check_out,
-
-ea.total_hours
-
-FROM employee_attendance ea
-JOIN employees e
-ON ea.employee_id=e.id
-
-WHERE e.active = 1
-AND DATE(ea.check_in)
-BETWEEN ? AND ?
-AND (
-
-e.full_name LIKE ?
-
-OR e.department LIKE ?
-
-OR e.designation LIKE ?
-
-)
-
-ORDER BY
-ea.attendance_date DESC,
-ea.check_in DESC
-
-");
-
-$stmt->execute([
-    $from,
-    $to,
-    "%$search%",
-    "%$search%",
-    "%$search%"
+fputcsv($output, [
+    'Employee',
+    'Department',
+    'Date',
+    'Check In',
+    'Check Out',
+    'Hours Worked',
+    'Status'
 ]);
 
-while(
-$row =
-$stmt->fetch(
-PDO::FETCH_ASSOC
-)
-){
+$from =
+    $_GET['from'] ??
+    date('Y-m-01');
 
-    fputcsv(
-        $output,
-        $row
-    );
+$to =
+    $_GET['to'] ??
+    date('Y-m-d');
+$search =
+    trim($_GET['search'] ?? '');
 
+$rows = generateAttendanceReport(
+    $pdo,
+    $from,
+    $to,
+    $search
+);
+
+foreach ($rows as $row) {
+
+    fputcsv($output, [
+
+        trim($row['title'] . ' ' . $row['full_name']),
+
+        $row['department'],
+
+        date('d-m-Y', strtotime($row['attendance_date'])),
+
+        $row['check_in']
+            ? date('h:i A', strtotime($row['check_in']))
+            : '-',
+
+        $row['check_out']
+            ? date('h:i A', strtotime($row['check_out']))
+            : '-',
+
+        $row['total_hours'] ?: '-',
+
+        $row['status']
+
+    ]);
 }
-
 fclose(
-$output
+    $output
 );
 
 exit;

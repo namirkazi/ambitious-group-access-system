@@ -8,7 +8,6 @@ if (
 
     header("Location: login.php");
     exit();
-
 }
 
 if (
@@ -19,7 +18,6 @@ if (
 
     header("Location: admin.php");
     exit();
-
 }
 
 require_once 'includes/config.php';
@@ -60,42 +58,112 @@ $to =
     ??
     date('Y-m-d');
 
+// Get all active employees
+$employees = $pdo->query("
+    SELECT
+        id,
+        title,
+        full_name,
+        department,
+        photo_path
+    FROM employees
+    WHERE active = 1
+    ORDER BY full_name
+")->fetchAll();
 
+// Get attendance records for selected range
 $stmt = $pdo->prepare("
-
-SELECT
-
-e.id,
-e.title,
-e.full_name,
-e.department,
-e.photo_path,
-
-ea.attendance_date,
-ea.check_in,
-ea.check_out,
-ea.total_hours
-
-FROM employee_attendance ea
-
-JOIN employees e
-ON ea.employee_id=e.id
-
-WHERE DATE(ea.attendance_date)
-BETWEEN ? AND ?
-
-ORDER BY
-ea.attendance_date DESC,
-ea.check_in DESC
-
+    SELECT
+        employee_id,
+        attendance_date,
+        check_in,
+        check_out,
+        total_hours
+    FROM employee_attendance
+    WHERE attendance_date BETWEEN ? AND ?
 ");
 
-$stmt->execute([
-    $from,
-    $to
-]);
+$stmt->execute([$from, $to]);
 
-$attendance = $stmt->fetchAll();
+$records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Index attendance by date then employee
+$attendanceIndex = [];
+
+foreach ($records as $record) {
+
+    $date = date('Y-m-d', strtotime($record['attendance_date']));
+
+    $attendanceIndex[$date][$record['employee_id']] = $record;
+}
+
+// Generate report
+$attendance = [];
+
+$period = new DatePeriod(
+    new DateTime($from),
+    new DateInterval('P1D'),
+    (new DateTime($to))->modify('+1 day')
+);
+
+foreach ($period as $day) {
+
+    // Skip Sundays
+    if ($day->format('w') == 0) {
+        continue;
+    }
+
+    $date = $day->format('Y-m-d');
+
+    foreach ($employees as $employee) {
+
+        if (isset($attendanceIndex[$date][$employee['id']])) {
+
+            $record = $attendanceIndex[$date][$employee['id']];
+
+            $status = $record['check_out']
+                ? 'Checked Out'
+                : ($date == date('Y-m-d') ? 'Present' : 'Missed Checkout');
+
+            $attendance[] = [
+
+                'id' => $employee['id'],
+                'title' => $employee['title'],
+                'full_name' => $employee['full_name'],
+                'department' => $employee['department'],
+                'photo_path' => $employee['photo_path'],
+
+                'attendance_date' => $date,
+
+                'check_in' => $record['check_in'],
+                'check_out' => $record['check_out'],
+                'total_hours' => $record['total_hours'],
+
+                'status' => $status
+
+            ];
+        } else {
+
+            $attendance[] = [
+
+                'id' => $employee['id'],
+                'title' => $employee['title'],
+                'full_name' => $employee['full_name'],
+                'department' => $employee['department'],
+                'photo_path' => $employee['photo_path'],
+
+                'attendance_date' => $date,
+
+                'check_in' => null,
+                'check_out' => null,
+                'total_hours' => null,
+
+                'status' => 'Absent'
+
+            ];
+        }
+    }
+}
 ?>
 
 <head>
@@ -551,13 +619,22 @@ $attendance = $stmt->fetchAll();
             font-weight: 600;
         }
 
-        .badge.missed {
+        .badge.absent {
 
             background:
                 rgba(239, 68, 68, .15);
 
             color:
                 var(--danger);
+
+        }
+
+        .badge.missed {
+
+            background: rgba(245, 158, 11, 0.15);
+
+            color:
+                var(--warn);
 
         }
 
@@ -948,12 +1025,10 @@ gap:.75rem;
                             <td>
                                 <span class="badge out">
 
-                                    <?= date(
-                                        'd-m-Y',
-                                        strtotime(
-                                            $row['attendance_date']
-                                        )
-                                    ) ?>
+                                    <?= $row['attendance_date']
+                                        ? date('d-m-Y', strtotime($row['attendance_date']))
+                                        : '-'
+                                    ?>
 
                                 </span>
 
@@ -961,23 +1036,17 @@ gap:.75rem;
 
                             <td>
 
-                                <?= date(
-
-                                    'h:i A',
-
-                                    strtotime(
-                                        $row['check_in']
-                                    )
-
-                                ) ?>
-
+                                <?= $row['check_in']
+                                    ? date('h:i A', strtotime($row['check_in']))
+                                    : '-'
+                                ?>
                             </td>
 
                             <td>
 
                                 <?=
 
-                                    $row['check_out']
+                                $row['check_out']
 
                                     ?
 
@@ -995,7 +1064,7 @@ gap:.75rem;
 
                                     '-'
 
-                                    ?>
+                                ?>
 
                             </td>
 
@@ -1003,7 +1072,7 @@ gap:.75rem;
 
                                 <?=
 
-                                    $row['total_hours']
+                                $row['total_hours']
 
                                     ?
 
@@ -1013,7 +1082,7 @@ gap:.75rem;
 
                                     '-'
 
-                                    ?>
+                                ?>
 
 
 
@@ -1023,38 +1092,22 @@ gap:.75rem;
 
                                 <?php
 
-                                $attendanceDate =
-                                    date(
-                                        'Y-m-d',
-                                        strtotime(
-                                            $row['attendance_date']
-                                        )
-                                    );
+                                $statusClass = match ($row['status']) {
 
-                                $today =
-                                    date('Y-m-d');
+                                    'Present' => 'in',
+
+                                    'Checked Out' => 'out',
+
+                                    'Missed Checkout' => 'missed',
+
+                                    default => 'absent'
+                                };
 
                                 ?>
 
-                                <?php if ($row['check_out']): ?>
-
-                                    <span class="badge out">
-                                        Checked Out
-                                    </span>
-
-                                <?php elseif ($attendanceDate == $today): ?>
-
-                                    <span class="badge in">
-                                        Present
-                                    </span>
-
-                                <?php else: ?>
-
-                                    <span class="badge missed">
-                                        Missed Checkout
-                                    </span>
-
-                                <?php endif; ?>
+                                <span class="badge <?= $statusClass ?>">
+                                    <?= $row['status'] ?>
+                                </span>
 
                             </td>
 
@@ -1070,7 +1123,6 @@ gap:.75rem;
 
 
         <script>
-
             const searchInput =
                 document.getElementById(
                     'searchInput'
@@ -1083,7 +1135,7 @@ gap:.75rem;
 
             searchInput.addEventListener(
                 'input',
-                function () {
+                function() {
 
                     const value =
                         this.value.toLowerCase();
@@ -1099,12 +1151,10 @@ gap:.75rem;
 
                             row.style.display =
                                 row.innerText
-                                    .toLowerCase()
-                                    .includes(value)
-                                    ?
-                                    ''
-                                    :
-                                    'none';
+                                .toLowerCase()
+                                .includes(value) ?
+                                '' :
+                                'none';
 
                         });
 
@@ -1119,6 +1169,7 @@ gap:.75rem;
                 );
 
             };
+
             function applyDateFilter() {
 
                 const from =
@@ -1135,6 +1186,7 @@ gap:.75rem;
                     `attendance.php?from=${from}&to=${to}`;
 
             }
+
             function exportExcel() {
 
                 const from = document.getElementById('fromDate').value;
@@ -1145,6 +1197,7 @@ gap:.75rem;
                     `api/export_excel.php?from=${from}&to=${to}&search=${encodeURIComponent(search)}`
                 );
             }
+
             function resetFilter() {
                 window.location =
                     'attendance.php';
@@ -1162,7 +1215,6 @@ gap:.75rem;
                 );
 
             }
-
         </script>
 
 </body>
