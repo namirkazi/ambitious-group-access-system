@@ -77,12 +77,7 @@ $presentDays = count($attendanceRows);
 // Calculate working days (excluding Sundays)
 $workingDays = 0;
 
-$daysInMonth = cal_days_in_month(
-    CAL_GREGORIAN,
-    $month,
-    $year
-);
-
+$daysInMonth = date('t', strtotime(sprintf('%04d-%02d-01', $year, $month)));
 for ($d = 1; $d <= $daysInMonth; $d++) {
 
     $date = sprintf(
