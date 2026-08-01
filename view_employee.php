@@ -71,6 +71,31 @@ foreach ($attendanceRows as $row) {
         'total_hours' => $row['total_hours'],
     ];
 }
+// Count present days
+$presentDays = count($attendanceRows);
+
+// Calculate working days (excluding Sundays)
+$workingDays = 0;
+
+$daysInMonth = cal_days_in_month(
+    CAL_GREGORIAN,
+    $month,
+    $year
+);
+
+for ($d = 1; $d <= $daysInMonth; $d++) {
+
+    $date = sprintf(
+        '%04d-%02d-%02d',
+        $year,
+        $month,
+        $d
+    );
+
+    if (date('w', strtotime($date)) != 0) {
+        $workingDays++;
+    }
+}
 ?>
 
 <head>
@@ -645,6 +670,24 @@ foreach ($attendanceRows as $row) {
             opacity: .4;
         }
 
+        .attendance-summary {
+
+            margin-top: 14px;
+
+            font-size: .9rem;
+
+            font-weight: 600;
+
+            color: var(--text);
+
+        }
+
+        .attendance-summary strong {
+
+            color: var(--success);
+
+        }
+
         .calendar-grid {
 
             display: grid;
@@ -1008,7 +1051,23 @@ foreach ($attendanceRows as $row) {
                         <!-- populated by JS -->
 
                     </div>
+                    <div class="attendance-summary">
 
+                        Attendance:
+
+                        <strong id="presentDaysCount">
+                            <?= $presentDays ?>
+                        </strong>
+
+                        /
+
+                        <strong id="workingDaysCount">
+                            <?= $workingDays ?>
+                        </strong>
+
+                        working days
+
+                    </div>
 
                 </div>
             </div>
@@ -1440,7 +1499,15 @@ foreach ($attendanceRows as $row) {
 
                 if (!res.ok) throw new Error("Failed to load attendance");
 
-                attendanceData = await res.json();
+                const data = await res.json();
+
+                attendanceData = data.attendance;
+
+                document.getElementById("presentDaysCount").textContent =
+                    data.presentDays;
+
+                document.getElementById("workingDaysCount").textContent =
+                    data.workingDays;
 
                 currentMonth = month;
                 currentYear = year;

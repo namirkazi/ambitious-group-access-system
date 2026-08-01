@@ -47,7 +47,32 @@ AND MONTH(attendance_date) = ?
 $stmt->execute([$employeeId, $year, $month]);
 
 $rows = $stmt->fetchAll();
+// Count present days
+$presentDays = count($rows);
 
+// Calculate working days (excluding Sundays)
+$workingDays = 0;
+
+$daysInMonth = cal_days_in_month(
+    CAL_GREGORIAN,
+    $month,
+    $year
+);
+
+for ($d = 1; $d <= $daysInMonth; $d++) {
+
+    $date = sprintf(
+        '%04d-%02d-%02d',
+        $year,
+        $month,
+        $d
+    );
+
+    if (date('w', strtotime($date)) != 0) {
+        $workingDays++;
+    }
+
+}
 $map = [];
 
 foreach ($rows as $row) {
@@ -61,4 +86,12 @@ foreach ($rows as $row) {
 
 }
 
-echo json_encode($map);
+echo json_encode([
+
+    'attendance' => $map,
+
+    'presentDays' => $presentDays,
+
+    'workingDays' => $workingDays
+
+]);
