@@ -35,7 +35,6 @@ if (is_dir('/data/storage')) {
 
     define('STORAGE_ROOT', '/data/storage/');
     define('UPLOAD_URL', 'storage/');
-
 } else {
 
     define(
@@ -47,7 +46,6 @@ if (is_dir('/data/storage')) {
         'UPLOAD_URL',
         'assets/uploads/'
     );
-
 }
 define(
     'BASE_URL',
@@ -84,12 +82,23 @@ define(
     'EMPLOYEE_DOCUMENT_DIR',
     STORAGE_ROOT . 'employees/documents/'
 );
+/*
+|--------------------------------------------------------------------------
+| Driver Trip Storage
+|--------------------------------------------------------------------------
+*/
+
+define(
+    'DRIVER_TRIP_DIR',
+    STORAGE_ROOT . 'driver_trips/'
+);
 $directories = [
 
     VISITOR_PHOTO_DIR,
     VISITOR_DOCUMENT_DIR,
     EMPLOYEE_PHOTO_DIR,
-    EMPLOYEE_DOCUMENT_DIR
+    EMPLOYEE_DOCUMENT_DIR,
+    DRIVER_TRIP_DIR
 
 ];
 
@@ -98,9 +107,7 @@ foreach ($directories as $dir) {
     if (!is_dir($dir)) {
 
         mkdir($dir, 0755, true);
-
     }
-
 }
 function getDB()
 {
@@ -124,13 +131,13 @@ function getDB()
                 [
 
                     PDO::ATTR_ERRMODE =>
-                        PDO::ERRMODE_EXCEPTION,
+                    PDO::ERRMODE_EXCEPTION,
 
                     PDO::ATTR_DEFAULT_FETCH_MODE =>
-                        PDO::FETCH_ASSOC,
+                    PDO::FETCH_ASSOC,
 
                     PDO::ATTR_EMULATE_PREPARES =>
-                        false
+                    false
 
                 ]
 
@@ -138,14 +145,10 @@ function getDB()
             $pdo->exec("SET time_zone = '+04:00'");
         } catch (PDOException $e) {
 
-            die(
-                "Database connection failed: "
+            die("Database connection failed: "
                 .
-                $e->getMessage()
-            );
-
+                $e->getMessage());
         }
-
     }
 
     return $pdo;

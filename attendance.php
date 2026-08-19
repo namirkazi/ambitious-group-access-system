@@ -776,6 +776,13 @@ gap:.75rem;
 
             </a>
         <?php endif; ?>
+        <?php if ($_SESSION['role'] == 'hr'): ?>
+            <a href="driver_trips.php">
+
+                Driver Trips
+
+            </a>
+        <?php endif; ?>
         <?php if ($_SESSION['role'] == 'admin'): ?>
             <a href="admin.php">
 
