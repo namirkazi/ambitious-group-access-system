@@ -240,7 +240,7 @@ if (
 
     $redirect =
         $activeTrip
-            ? 'trip_end.php'
+            ? 'trip_stop.php'
             : 'trip_start.php';
 
 
