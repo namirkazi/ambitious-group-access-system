@@ -82,7 +82,7 @@ $activeTrip = $tripStmt->fetch(PDO::FETCH_ASSOC);
 
 if ($activeTrip) {
 
-    header('Location: trip_end.php');
+    header('Location: trip_stop.php');
     exit;
 }
 
