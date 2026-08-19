@@ -632,7 +632,6 @@ $vehicles = $vehicleStmt->fetchAll(PDO::FETCH_ASSOC);
                 id,
                 name
             FROM requestors
-            WHERE active = 1
             ORDER BY name ASC
         ");
 
