@@ -1615,6 +1615,10 @@ $tripJson =
                             </th>
 
                             <th>
+                                Requestor
+                            </th>
+
+                            <th>
                                 Start Time
                             </th>
 
@@ -1643,7 +1647,7 @@ $tripJson =
                             <tr>
 
                                 <td
-                                    colspan="6"
+                                    colspan="7"
                                     class="empty">
                                     No trips found for the
                                     selected dates.
@@ -1699,6 +1703,15 @@ $tripJson =
 
                                     </td>
 
+                                    <!-- REQUESTOR -->
+                                    <td>
+                                        <div class="driver-name">
+                                            <?= htmlspecialchars(
+                                                $trip['requestor_name']
+                                                    ?: '-'
+                                            ) ?>
+                                        </div>
+                                    </td>
 
                                     <!-- START -->
 
@@ -2510,18 +2523,14 @@ $tripJson =
         function getPhotoUrl(path) {
 
             if (!path) {
-
                 return '';
-
             }
 
             return <?= json_encode(
-                        rtrim(BASE_URL, '/') . '/' .
-                            trim(UPLOAD_URL, '/') . '/'
+                        rtrim(UPLOAD_URL, '/') . '/'
                     ) ?> + path;
 
         }
-
 
         /*
         |--------------------------------------------------------------------------

@@ -647,15 +647,23 @@ try {
     */
 
     if (
-        $savedPhotoPath &&
-        file_exists(
-            '../' . $savedPhotoPath
-        )
+        $savedPhotoPath
     ) {
 
-        @unlink(
-            '../' . $savedPhotoPath
-        );
+        $savedFilePath =
+            DRIVER_TRIP_DIR .
+            basename($savedPhotoPath);
+
+        if (
+            file_exists(
+                $savedFilePath
+            )
+        ) {
+
+            @unlink(
+                $savedFilePath
+            );
+        }
     }
 
 
