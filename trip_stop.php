@@ -630,13 +630,7 @@ if (!$trip) {
                     Remarks
                 </label>
 
-                <textarea
-                    id="remarks"
-                    name="remarks"
-                    rows="4"
-                    maxlength="1000"
-                    placeholder="Add any remarks about the trip or what happened with the client...">
-                </textarea>
+                <textarea id="remarks" name="remarks" rows="4" maxlength="1000" placeholder="Add any remarks about the trip or what happened with the client..."></textarea>
 
                 <button
                     type="submit"
