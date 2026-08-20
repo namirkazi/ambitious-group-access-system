@@ -38,14 +38,6 @@ $faceDescriptor = $_POST['face_descriptor'] ?? '';
 if (!preg_match('/^\+971 \d{2} \d{7}$/', $phone)) {
     respond(false, 'Invalid phone number');
 }
-
-if (
-    !empty($email) &&
-    !filter_var($email, FILTER_VALIDATE_EMAIL)
-) {
-
-    respond(false, 'Invalid email address');
-}
 if (!preg_match('/^\d{3}-\d{4}-\d{7}-\d{1}$/', $emiratesId)) {
     respond(false, 'Invalid Emirates ID');
 }
@@ -75,15 +67,14 @@ if (!is_array($decodedDescriptor)) {
 // ── Duplicate checks ──────────────────────────────────────
 try {
     $dupStmt = $pdo->prepare(
-        "SELECT id FROM drivers WHERE emirates_id = :eid OR email = :email OR license_number = :lic LIMIT 1"
+        "SELECT id FROM drivers WHERE emirates_id = :eid OR license_number = :lic LIMIT 1"
     );
     $dupStmt->execute([
         ':eid'   => $emiratesId,
-        ':email' => $email,
         ':lic'   => $licenseNumber,
     ]);
     if ($dupStmt->fetch()) {
-        respond(false, 'A driver with this Emirates ID, email, or license number already exists');
+        respond(false, 'A driver with this Emirates ID or license number already exists');
     }
 } catch (Exception $e) {
     respond(false, 'Database error while checking duplicates: ' . $e->getMessage());

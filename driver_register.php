@@ -960,7 +960,6 @@ $pdo = getDB();
 
         // ── Submit ─────────────────────────────────────────
         const nameRegex = /^[A-Za-z ]{3,100}$/;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const phoneRegex = /^\+971 \d{2} \d{7}$/;
         const emiratesIdRegex = /^\d{3}-\d{4}-\d{7}-\d{1}$/;
 
@@ -991,16 +990,6 @@ $pdo = getDB();
             }
 
             const email = document.getElementById('email').value.trim();
-
-            if (!emailRegex.test(email)) {
-
-                showToast(
-                    'Invalid email address'
-                );
-
-                return;
-
-            }
 
             const emiratesId = document.getElementById('emiratesId').value.trim();
 
