@@ -27,7 +27,11 @@ function respond($success, $message = '', $extra = [])
 // ── Collect + validate input ─────────────────────────────
 $fullName       = trim($_POST['full_name'] ?? '');
 $phone          = trim($_POST['phone'] ?? '');
-$email          = trim($_POST['email'] ?? '');
+$email = trim($_POST['email'] ?? '');
+
+if ($email === '') {
+    $email = null;
+}
 $emiratesId     = trim($_POST['emirates_id'] ?? '');
 $licenseNumber  = trim($_POST['license_number'] ?? '');
 $licenseExpiry  = trim($_POST['license_expiry'] ?? '');
