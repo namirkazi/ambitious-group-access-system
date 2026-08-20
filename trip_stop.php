@@ -608,8 +608,8 @@ if (!$trip) {
                     id="end_km"
                     name="end_km"
                     min="0"
-                    step="1"
-                    inputmode="numeric"
+                    step="0.01"
+                    inputmode="decimal"
                     placeholder="Enter current KM"
                     required>
 
