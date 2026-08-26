@@ -297,6 +297,36 @@ $tripJson =
         }
 
 
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .25rem .7rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge.out {
+            background: rgba(148, 163, 184, .1);
+            color: var(--muted);
+        }
+
+        .badge-num {
+            font-family: monospace;
+            font-size: .8rem;
+            color: var(--accent2);
+        }
+
+        .date-group {
+
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+        }
+
         header .logo {
 
             display: flex;
@@ -780,16 +810,9 @@ $tripJson =
 
 
         tbody td {
-
-            padding:
-                .85rem 1rem;
-
+            padding: .85rem 1rem;
             font-size: .875rem;
-
             vertical-align: middle;
-
-            white-space: nowrap;
-
         }
 
 
@@ -1619,6 +1642,9 @@ $tripJson =
                             </th>
 
                             <th>
+                                Date
+                            </th>
+                            <th>
                                 Start Time
                             </th>
 
@@ -1647,7 +1673,7 @@ $tripJson =
                             <tr>
 
                                 <td
-                                    colspan="7"
+                                    colspan="8"
                                     class="empty">
                                     No trips found for the
                                     selected dates.
@@ -1714,7 +1740,20 @@ $tripJson =
                                     </td>
 
                                     <!-- START -->
+                                    <td>
+                                        <span class="badge out">
 
+                                            <?= $trip['trip_start']
+                                                ? date(
+                                                    'd-M-Y',
+                                                    strtotime(
+                                                        $trip['trip_start']
+                                                    )
+                                                )
+                                                : '-'
+                                            ?>
+                                        </span>
+                                    </td>
                                     <td class="time">
 
                                         <?= $trip['trip_start']
