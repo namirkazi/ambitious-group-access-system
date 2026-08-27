@@ -1032,7 +1032,7 @@ $tripJson =
 
         .close-btn {
 
-            background: #640a0afb;
+            background: var(--danger);
 
             color: white;
 
@@ -1054,7 +1054,7 @@ $tripJson =
 
         .close-btn:hover {
 
-            background: var(--danger);
+            background: #ff0000;
 
             color: white;
 
