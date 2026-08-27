@@ -1912,7 +1912,7 @@ $tripJson =
                         type="button"
                         class="close-btn"
                         onclick="closeTripModal()">
-                        close
+                        Close
                     </button>
 
                 </div>
