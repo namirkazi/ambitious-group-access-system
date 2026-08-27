@@ -1032,21 +1032,22 @@ $tripJson =
 
         .close-btn {
 
-            width: 32px;
+            background: #640a0afb;
 
-            height: 32px;
+            color: white;
 
             border: none;
 
-            border-radius: 50%;
+            border-radius: 8px;
 
-            background: var(--surface2);
+            padding:
+                .55rem .9rem;
 
-            color: var(--muted);
+            font-size: .75rem;
+
+            font-weight: 600;
 
             cursor: pointer;
-
-            font-size: 1rem;
 
         }
 
@@ -1898,13 +1899,23 @@ $tripJson =
                     Trip Information
                 </h3>
 
+                <div class="modal-actions">
 
-                <button
-                    type="button"
-                    class="close-btn"
-                    onclick="closeTripModal()">
-                    ✕
-                </button>
+                    <button
+                        type="button"
+                        class="action-btn"
+                        onclick="printTripPDF()">
+                        PDF
+                    </button>
+                    |
+                    <button
+                        type="button"
+                        class="close-btn"
+                        onclick="closeTripModal()">
+                        close
+                    </button>
+
+                </div>
 
             </div>
 
@@ -2110,7 +2121,7 @@ $tripJson =
 
             }
 
-
+            currentTrip = trip;
             const details =
                 document.getElementById(
                     'tripDetails'
@@ -2395,6 +2406,18 @@ $tripJson =
 
         }
 
+        function printTripPDF() {
+
+            if (!currentTrip || !currentTrip.id) {
+                return;
+            }
+
+            window.open(
+                `api/export_driver_trip_pdf.php?id=${encodeURIComponent(currentTrip.id)}`,
+                '_blank'
+            );
+
+        }
 
         function closeModal(event) {
 
