@@ -719,6 +719,271 @@ if (!$trip) {
         | End photo compression
         |--------------------------------------------------------------------------
         */
+        /*
+|--------------------------------------------------------------------------
+| Live GPS Tracking
+|--------------------------------------------------------------------------
+*/
+
+        const activeTripId =
+            <?= (int) $trip['id'] ?>;
+
+        let locationWatchId = null;
+
+        let lastLocationSentAt = 0;
+
+        const LOCATION_SEND_INTERVAL = 15000;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Send location to server
+        |--------------------------------------------------------------------------
+        */
+
+        async function sendTripLocation(position) {
+
+            const now = Date.now();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Don't send more than once every 15 seconds
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                now - lastLocationSentAt <
+                LOCATION_SEND_INTERVAL
+            ) {
+                return;
+            }
+
+
+            lastLocationSentAt = now;
+
+
+            const latitude =
+                position.coords.latitude;
+
+            const longitude =
+                position.coords.longitude;
+
+            const accuracy =
+                position.coords.accuracy;
+
+
+            const formData =
+                new FormData();
+
+            formData.append(
+                'trip_id',
+                activeTripId
+            );
+
+            formData.append(
+                'latitude',
+                latitude
+            );
+
+            formData.append(
+                'longitude',
+                longitude
+            );
+
+            formData.append(
+                'accuracy',
+                accuracy
+            );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        'api/update_trip_location.php', {
+                            method: 'POST',
+                            body: formData
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+                    console.warn(
+                        'GPS update failed:',
+                        data.message
+                    );
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    'GPS network error:',
+                    error
+                );
+            }
+        }
+
+        async function sendFinalTripLocation(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            const formData = new FormData();
+
+            formData.append('trip_id', activeTripId);
+            formData.append('latitude', latitude);
+            formData.append('longitude', longitude);
+            formData.append('accuracy', accuracy);
+
+            try {
+                const response = await fetch(
+                    'api/update_trip_location.php', {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.warn(
+                        'Final GPS update failed:',
+                        data.message
+                    );
+
+                    return false;
+                }
+
+                return true;
+
+            } catch (error) {
+                console.warn(
+                    'Final GPS network error:',
+                    error
+                );
+
+                return false;
+            }
+        }
+        async function captureFinalTripLocation() {
+
+            if (!navigator.geolocation) {
+                return false;
+            }
+
+            return new Promise(function(resolve) {
+
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+
+                            const saved =
+                                await sendFinalTripLocation(position);
+
+                            resolve(saved);
+                        },
+
+                        function(error) {
+
+                            console.warn(
+                                'Unable to get final GPS location:',
+                                error.message
+                            );
+
+                            resolve(false);
+                        },
+
+                        {
+                            enableHighAccuracy: true,
+                            maximumAge: 0,
+                            timeout: 10000
+                        }
+                );
+
+            });
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | GPS error
+        |--------------------------------------------------------------------------
+        */
+
+        function locationError(error) {
+
+            console.warn(
+                'GPS error:',
+                error.message
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Start GPS tracking
+        |--------------------------------------------------------------------------
+        */
+
+        function startLocationTracking() {
+
+            if (
+                !navigator.geolocation
+            ) {
+
+                console.warn(
+                    'Geolocation is not supported.'
+                );
+
+                return;
+            }
+
+
+            locationWatchId =
+                navigator.geolocation.watchPosition(
+                    sendTripLocation,
+                    locationError, {
+                        enableHighAccuracy: true,
+
+                        maximumAge: 10000,
+
+                        timeout: 20000
+                    }
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Stop GPS tracking
+        |--------------------------------------------------------------------------
+        */
+
+        function stopLocationTracking() {
+
+            if (
+                locationWatchId !== null
+            ) {
+
+                navigator.geolocation.clearWatch(
+                    locationWatchId
+                );
+
+                locationWatchId = null;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Start immediately
+        |--------------------------------------------------------------------------
+        */
+
+        startLocationTracking();
 
         function compressImage(file) {
 
@@ -923,8 +1188,11 @@ if (!$trip) {
                     button.textContent =
                         'Ending Trip...';
 
+                    stopLocationTracking();
 
                     try {
+
+                        await captureFinalTripLocation();
 
                         const formData =
                             new FormData(form);

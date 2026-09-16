@@ -180,6 +180,13 @@ $tripJson =
 
 <head>
 
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
     <meta charset="UTF-8">
 
     <meta
@@ -1191,6 +1198,201 @@ $tripJson =
 
         }
 
+        /*
+|--------------------------------------------------------------------------
+| Trip Route Map
+|--------------------------------------------------------------------------
+*/
+
+        .trip-route {
+            margin-top: 1rem;
+        }
+
+        .trip-route-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+
+            margin-bottom: .75rem;
+        }
+
+        .trip-route-title {
+            font-size: .8rem;
+            font-weight: 700;
+
+            color: var(--muted);
+
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .trip-route-count {
+            font-size: .75rem;
+            color: var(--accent2);
+        }
+
+        #tripRouteMap {
+            width: 100%;
+            height: 450px;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            border: 1px solid var(--border);
+
+            background: #11131a;
+        }
+
+        .route-loading {
+            min-height: 120px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: var(--muted);
+            font-size: .85rem;
+
+            background: var(--surface2);
+
+            border-radius: 10px;
+        }
+
+        .route-empty {
+            padding: 2rem;
+
+            text-align: center;
+
+            color: var(--muted);
+
+            background: var(--surface2);
+
+            border-radius: 10px;
+
+            font-size: .85rem;
+        }
+
+        .route-legend {
+            display: flex;
+
+            gap: 1rem;
+
+            margin-top: .65rem;
+
+            font-size: .75rem;
+
+            color: var(--muted);
+        }
+
+        .route-legend-item {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .route-dot {
+            width: 9px;
+            height: 9px;
+
+            border-radius: 50%;
+        }
+
+        .route-dot.start {
+            background: #22c55e;
+        }
+
+        .route-dot.end {
+            background: #ef4444;
+        }
+
+        @media (max-width: 600px) {
+
+            #tripRouteMap {
+                height: 350px;
+            }
+        }
+
+        /*
+|--------------------------------------------------------------------------
+| Live Location
+|--------------------------------------------------------------------------
+*/
+
+        .live-location {
+            margin-top: 1rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+
+        .live-location-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+
+            padding: .9rem 1rem;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .live-location-header h4 {
+            margin: 0 0 .25rem;
+
+            font-size: .85rem;
+        }
+
+
+        .live-map-status {
+            color: var(--muted);
+
+            font-size: .72rem;
+        }
+
+
+        .location-meta {
+            color: var(--muted);
+
+            font-size: .7rem;
+
+            text-align: right;
+        }
+
+
+        .live-map {
+            width: 100%;
+            height: 350px;
+
+            background: #11131a;
+        }
+
+
+        .live-location.hidden {
+            display: none;
+        }
+
+
+        @media (max-width: 600px) {
+
+            .live-location-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .location-meta {
+                text-align: left;
+            }
+
+            .live-map {
+                height: 300px;
+            }
+
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -1324,7 +1526,9 @@ $tripJson =
 
         }
     </style>
-
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
 </head>
 
 
@@ -1925,11 +2129,89 @@ $tripJson =
                 id="tripDetails"></div>
 
 
+            <!-- LIVE LOCATION -->
+
+            <div
+                class="live-location"
+                id="liveLocationSection">
+
+                <div class="live-location-header">
+
+                    <div>
+
+                        <h4>
+                            Live Driver Location
+                        </h4>
+
+                        <div
+                            id="liveMapStatus"
+                            class="live-map-status">
+                            Waiting for location...
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="locationMeta"
+                        class="location-meta">
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="liveMap"
+                    class="live-map">
+                </div>
+
+            </div>
+
+
             <div
                 class="photos"
                 id="tripPhotos"></div>
 
+            <!-- COMPLETED TRIP ROUTE -->
 
+            <div class="trip-route">
+
+                <div class="trip-route-header">
+
+                    <div class="trip-route-title">
+                        Trip Route
+                    </div>
+
+                    <div
+                        id="tripRouteCount"
+                        class="trip-route-count">
+                    </div>
+
+                </div>
+
+                <div
+                    id="tripRouteMapContainer"
+                    class="route-loading">
+                    Loading route...
+                </div>
+
+                <div
+                    id="tripRouteLegend"
+                    class="route-legend"
+                    style="display: none;">
+
+                    <div class="route-legend-item">
+                        <span class="route-dot start"></span>
+                        Start
+                    </div>
+
+                    <div class="route-legend-item">
+                        <span class="route-dot end"></span>
+                        End
+                    </div>
+
+                </div>
+
+            </div>
         </div>
 
     </div>
@@ -1945,8 +2227,359 @@ $tripJson =
         const trips =
             <?= $tripJson ?: '[]' ?>;
 
+        /*
+|--------------------------------------------------------------------------
+| Live Location State
+|--------------------------------------------------------------------------
+*/
+
+        let currentTrip = null;
+
+        let liveMap = null;
+
+        let liveMarker = null;
+
+        let liveLocationInterval = null;
+
+        let liveTripId = null;
+
+        let tripRouteMap = null;
+        let tripRouteLine = null;
+        let tripRouteStartMarker = null;
+        let tripRouteEndMarker = null;
+        /*
+        |--------------------------------------------------------------------------
+        | Initialize Live Map
+        |--------------------------------------------------------------------------
+        */
+
+        function initializeLiveMap() {
+
+            if (liveMap) {
+                return;
+            }
+
+
+            liveMap =
+                L.map('liveMap')
+                .setView(
+                    [25.2048, 55.2708],
+                    12
+                );
+
+
+            L.tileLayer(
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+
+                    attribution: '&copy; OpenStreetMap contributors'
+                }
+            ).addTo(liveMap);
+        }
+
 
         /*
+        |--------------------------------------------------------------------------
+        | Fetch latest driver location
+        |--------------------------------------------------------------------------
+        */
+
+        async function fetchLiveLocation() {
+
+            if (!liveTripId) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `api/get_trip_location.php?trip_id=${encodeURIComponent(liveTripId)}`, {
+                            cache: 'no-store'
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+                    document.getElementById(
+                            'liveMapStatus'
+                        ).textContent =
+                        data.message ||
+                        'Unable to get location.';
+
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Trip completed
+                |--------------------------------------------------------------------------
+                */
+
+                if (!data.active) {
+
+                    document.getElementById(
+                            'liveMapStatus'
+                        ).textContent =
+                        'Trip completed.';
+
+                    stopLiveTracking();
+
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | No location yet
+                |--------------------------------------------------------------------------
+                */
+
+                if (!data.location) {
+
+                    document.getElementById(
+                            'liveMapStatus'
+                        ).textContent =
+                        'Waiting for driver GPS...';
+
+                    return;
+                }
+
+
+                const latitude =
+                    Number(
+                        data.location.latitude
+                    );
+
+                const longitude =
+                    Number(
+                        data.location.longitude
+                    );
+
+                const accuracy =
+                    data.location.accuracy !== null ?
+                    Number(
+                        data.location.accuracy
+                    ) :
+                    null;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update marker
+                |--------------------------------------------------------------------------
+                */
+
+                if (!liveMarker) {
+
+                    liveMarker =
+                        L.marker([
+                            latitude,
+                            longitude
+                        ])
+                        .addTo(liveMap);
+
+                    liveMarker.bindPopup(
+                        currentTrip ?
+                        escapeHtml(
+                            currentTrip.driver_name
+                        ) :
+                        'Driver'
+                    );
+
+                } else {
+
+                    liveMarker.setLatLng([
+                        latitude,
+                        longitude
+                    ]);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Move map
+                |--------------------------------------------------------------------------
+                */
+
+                liveMap.setView(
+                    [
+                        latitude,
+                        longitude
+                    ],
+                    liveMap.getZoom() < 15 ?
+                    15 :
+                    liveMap.getZoom()
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Status
+                |--------------------------------------------------------------------------
+                */
+
+                document.getElementById(
+                        'liveMapStatus'
+                    ).textContent =
+                    'Live location updating';
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Metadata
+                |--------------------------------------------------------------------------
+                */
+
+                let meta =
+                    `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+
+                if (accuracy !== null) {
+
+                    meta +=
+                        ` · ±${Math.round(accuracy)}m`;
+                }
+
+
+                meta +=
+                    ` · ${formatDateTime(
+                data.location.recorded_at
+            )}`;
+
+
+                document.getElementById(
+                        'locationMeta'
+                    ).textContent =
+                    meta;
+
+
+            } catch (error) {
+
+                console.error(
+                    'Live location error:',
+                    error
+                );
+
+
+                document.getElementById(
+                        'liveMapStatus'
+                    ).textContent =
+                    'Connection error.';
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Start live tracking
+        |--------------------------------------------------------------------------
+        */
+
+        function startLiveTracking(tripId) {
+
+            stopLiveTracking();
+
+
+            liveTripId =
+                tripId;
+
+
+            const section =
+                document.getElementById(
+                    'liveLocationSection'
+                );
+
+
+            section.classList.remove(
+                'hidden'
+            );
+
+
+            initializeLiveMap();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Leaflet needs the container size
+            |--------------------------------------------------------------------------
+            */
+
+            setTimeout(
+                function() {
+
+                    if (liveMap) {
+
+                        liveMap.invalidateSize();
+
+                    }
+
+                },
+                100
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Fetch immediately
+            |--------------------------------------------------------------------------
+            */
+
+            fetchLiveLocation();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Poll every 5 seconds
+            |--------------------------------------------------------------------------
+            */
+
+            liveLocationInterval =
+                setInterval(
+                    fetchLiveLocation,
+                    5000
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Stop live tracking
+        |--------------------------------------------------------------------------
+        */
+
+        function stopLiveTracking() {
+
+            if (
+                liveLocationInterval !== null
+            ) {
+
+                clearInterval(
+                    liveLocationInterval
+                );
+
+                liveLocationInterval = null;
+            }
+
+
+            liveTripId = null;
+
+
+            if (liveMarker) {
+
+                liveMarker.remove();
+
+                liveMarker = null;
+            }
+        }
+        /*  
         |--------------------------------------------------------------------------
         | Search
         |--------------------------------------------------------------------------
@@ -2108,6 +2741,326 @@ $tripJson =
         | Trip modal
         |--------------------------------------------------------------------------
         */
+        async function loadTripRoute(tripId) {
+
+            const container =
+                document.getElementById(
+                    'tripRouteMapContainer'
+                );
+
+            const count =
+                document.getElementById(
+                    'tripRouteCount'
+                );
+
+            const legend =
+                document.getElementById(
+                    'tripRouteLegend'
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reset
+            |--------------------------------------------------------------------------
+            */
+
+            count.textContent = '';
+
+            legend.style.display = 'none';
+
+            container.className =
+                'route-loading';
+
+            container.innerHTML =
+                'Loading route...';
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Remove previous map
+            |--------------------------------------------------------------------------
+            */
+
+            if (tripRouteMap) {
+
+                tripRouteMap.remove();
+
+                tripRouteMap = null;
+            }
+
+            tripRouteLine = null;
+
+            tripRouteStartMarker = null;
+
+            tripRouteEndMarker = null;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `api/get_trip_route.php?trip_id=${encodeURIComponent(tripId)}`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        'Unable to load route.'
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+                    throw new Error(
+                        data.message ||
+                        'Unable to load route.'
+                    );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | No GPS points
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !data.locations ||
+                    data.locations.length === 0
+                ) {
+
+                    container.className =
+                        'route-empty';
+
+                    container.innerHTML =
+                        'No GPS route data was recorded for this trip.';
+
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Need at least one valid coordinate
+                |--------------------------------------------------------------------------
+                */
+
+                const points =
+                    data.locations
+                    .filter(
+                        location =>
+                        Number.isFinite(
+                            Number(location.latitude)
+                        ) &&
+                        Number.isFinite(
+                            Number(location.longitude)
+                        )
+                    )
+                    .map(
+                        location => [
+                            Number(location.latitude),
+                            Number(location.longitude)
+                        ]
+                    );
+
+
+                if (points.length === 0) {
+
+                    container.className =
+                        'route-empty';
+
+                    container.innerHTML =
+                        'No valid GPS coordinates were recorded.';
+
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Create map
+                |--------------------------------------------------------------------------
+                */
+
+                container.className = '';
+
+                container.innerHTML =
+                    '<div id="tripRouteMap"></div>';
+
+
+                tripRouteMap =
+                    L.map(
+                        'tripRouteMap', {
+                            scrollWheelZoom: true
+                        }
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | OpenStreetMap tiles
+                |--------------------------------------------------------------------------
+                */
+
+                L.tileLayer(
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }
+                ).addTo(
+                    tripRouteMap
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Draw route
+                |--------------------------------------------------------------------------
+                */
+
+                tripRouteLine =
+                    L.polyline(
+                        points, {
+                            weight: 5,
+
+                            opacity: 0.85
+                        }
+                    ).addTo(
+                        tripRouteMap
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Start marker
+                |--------------------------------------------------------------------------
+                */
+
+                tripRouteStartMarker =
+                    L.circleMarker(
+                        points[0], {
+                            radius: 8,
+
+                            weight: 3,
+
+                            fillOpacity: 1
+                        }
+                    )
+                    .addTo(
+                        tripRouteMap
+                    )
+                    .bindPopup(
+                        '<strong>Trip Start</strong>'
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | End marker
+                |--------------------------------------------------------------------------
+                */
+
+                if (points.length > 1) {
+
+                    tripRouteEndMarker =
+                        L.circleMarker(
+                            points[points.length - 1], {
+                                radius: 8,
+
+                                weight: 3,
+
+                                fillOpacity: 1
+                            }
+                        )
+                        .addTo(
+                            tripRouteMap
+                        )
+                        .bindPopup(
+                            '<strong>Trip End</strong>'
+                        );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Fit map to entire route
+                |--------------------------------------------------------------------------
+                */
+
+                tripRouteMap.fitBounds(
+                    tripRouteLine.getBounds(), {
+                        padding: [
+                            30,
+                            30
+                        ]
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Stats
+                |--------------------------------------------------------------------------
+                */
+
+                count.textContent =
+                    `${points.length} GPS points`;
+
+                legend.style.display =
+                    'flex';
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Leaflet needs a resize after modal becomes visible
+                |--------------------------------------------------------------------------
+                */
+
+                setTimeout(
+                    function() {
+
+                        if (tripRouteMap) {
+
+                            tripRouteMap.invalidateSize();
+
+                            tripRouteMap.fitBounds(
+                                tripRouteLine.getBounds(), {
+                                    padding: [
+                                        30,
+                                        30
+                                    ]
+                                }
+                            );
+                        }
+
+                    },
+                    150
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    'Trip route error:',
+                    error
+                );
+
+
+                container.className =
+                    'route-empty';
+
+                container.innerHTML =
+                    'Unable to load the trip route.';
+            }
+        }
 
         function viewTrip(index) {
 
@@ -2392,10 +3345,49 @@ $tripJson =
                 .classList
                 .add('show');
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Historical trip route
+            |--------------------------------------------------------------------------
+            */
+
+            loadTripRoute(trip.id);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Live location
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                trip.status === 'started'
+            ) {
+
+                startLiveTracking(
+                    trip.id
+                );
+
+            } else {
+
+                stopLiveTracking();
+
+                document
+                    .getElementById(
+                        'liveLocationSection'
+                    )
+                    .classList
+                    .add('hidden');
+            }
+
         }
 
 
         function closeTripModal() {
+
+            stopLiveTracking();
+
 
             document
                 .getElementById(
@@ -2403,7 +3395,6 @@ $tripJson =
                 )
                 .classList
                 .remove('show');
-
         }
 
         function printTripPDF() {

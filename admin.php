@@ -6,14 +6,12 @@ if (!isset($_SESSION['admin_logged_in'])) {
   header("Location: login.php");
 
   exit();
-
 }
 if ($_SESSION['role'] == 'hr') {
 
   header("Location: attendance.php");
 
   exit();
-
 }
 ?>
 <?php
@@ -660,6 +658,7 @@ gap:.75rem;
       ).style.display = 'none';
 
     }
+
     function checkoutVisitor(logId) {
 
       showModal(
@@ -671,16 +670,14 @@ gap:.75rem;
         () => {
 
           fetch(
-            'api/checkout.php',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type':
-                  'application/x-www-form-urlencoded'
-              },
-              body: 'log_id=' + logId
-            }
-          )
+              'api/checkout.php', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'log_id=' + logId
+              }
+            )
             .then(r => r.json())
             .then(data => {
 
@@ -692,8 +689,7 @@ gap:.75rem;
 
                 loadVisitors();
 
-              }
-              else {
+              } else {
 
                 showToast(
                   data.message
@@ -718,7 +714,6 @@ gap:.75rem;
     }
   </script>
   <script>
-
     function loadVisitors() {
 
       fetch('api/live_visits.php')
@@ -774,8 +769,8 @@ gap:.75rem;
         filterTable();
 
         if (
-          searchBox.value.trim()
-          !== ''
+          searchBox.value.trim() !==
+          ''
         ) {
 
           clearBtn.style.display =
@@ -783,8 +778,7 @@ gap:.75rem;
 
           stopRefresh();
 
-        }
-        else {
+        } else {
 
           clearBtn.style.display =
             'none';
@@ -809,7 +803,7 @@ gap:.75rem;
 
       loadVisitors();
 
-    }  
+    }
   </script>
   <div id="toast"></div>
 
