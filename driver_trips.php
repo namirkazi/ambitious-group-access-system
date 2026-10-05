@@ -2774,7 +2774,8 @@ $tripJson =
 
             count.textContent = '';
 
-            legend.style.display = 'none';
+            legend.style.display =
+                'none';
 
             container.className =
                 'route-loading';
@@ -2785,22 +2786,41 @@ $tripJson =
 
             /*
             |--------------------------------------------------------------------------
-            | Remove previous map
+            | Remove previous Google Maps objects
             |--------------------------------------------------------------------------
             */
 
-            if (tripRouteMap) {
+            if (tripRouteLine) {
 
-                tripRouteMap.remove();
+                tripRouteLine.setMap(
+                    null
+                );
 
-                tripRouteMap = null;
+                tripRouteLine = null;
             }
 
-            tripRouteLine = null;
 
-            tripRouteStartMarker = null;
+            if (tripRouteStartMarker) {
 
-            tripRouteEndMarker = null;
+                tripRouteStartMarker.setMap(
+                    null
+                );
+
+                tripRouteStartMarker = null;
+            }
+
+
+            if (tripRouteEndMarker) {
+
+                tripRouteEndMarker.setMap(
+                    null
+                );
+
+                tripRouteEndMarker = null;
+            }
+
+
+            tripRouteMap = null;
 
 
             try {
@@ -2855,7 +2875,7 @@ $tripJson =
 
                 /*
                 |--------------------------------------------------------------------------
-                | Need at least one valid coordinate
+                | Convert coordinates for Google Maps
                 |--------------------------------------------------------------------------
                 */
 
@@ -2864,21 +2884,33 @@ $tripJson =
                     .filter(
                         location =>
                         Number.isFinite(
-                            Number(location.latitude)
+                            Number(
+                                location.latitude
+                            )
                         ) &&
                         Number.isFinite(
-                            Number(location.longitude)
+                            Number(
+                                location.longitude
+                            )
                         )
                     )
                     .map(
-                        location => [
-                            Number(location.latitude),
-                            Number(location.longitude)
-                        ]
+                        location => ({
+
+                            lat: Number(
+                                location.latitude
+                            ),
+
+                            lng: Number(
+                                location.longitude
+                            )
+                        })
                     );
 
 
-                if (points.length === 0) {
+                if (
+                    points.length === 0
+                ) {
 
                     container.className =
                         'route-empty';
@@ -2892,57 +2924,66 @@ $tripJson =
 
                 /*
                 |--------------------------------------------------------------------------
-                | Create map
+                | Create map container
                 |--------------------------------------------------------------------------
                 */
 
-                container.className = '';
+                container.className =
+                    '';
 
                 container.innerHTML =
                     '<div id="tripRouteMap"></div>';
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | Google Map
+                |--------------------------------------------------------------------------
+                */
+
                 tripRouteMap =
-                    L.map(
-                        'tripRouteMap', {
-                            scrollWheelZoom: true
+                    new google.maps.Map(
+                        document.getElementById(
+                            'tripRouteMap'
+                        ), {
+                            center: points[0],
+
+                            zoom: 15,
+
+                            mapTypeId: google.maps.MapTypeId.ROADMAP,
+
+                            mapTypeControl: false,
+
+                            streetViewControl: false,
+
+                            fullscreenControl: true,
+
+                            zoomControl: true
                         }
                     );
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | OpenStreetMap tiles
-                |--------------------------------------------------------------------------
-                */
-
-                L.tileLayer(
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        maxZoom: 19,
-
-                        attribution: '&copy; OpenStreetMap contributors'
-                    }
-                ).addTo(
-                    tripRouteMap
-                );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Draw route
+                | Route line
                 |--------------------------------------------------------------------------
                 */
 
                 tripRouteLine =
-                    L.polyline(
-                        points, {
-                            weight: 5,
+                    new google.maps.Polyline({
 
-                            opacity: 0.85
-                        }
-                    ).addTo(
-                        tripRouteMap
-                    );
+                        path: points,
+
+                        geodesic: true,
+
+                        strokeColor: '#6c63ff',
+
+                        strokeOpacity: 0.9,
+
+                        strokeWeight: 5,
+
+                        map: tripRouteMap
+                    });
 
 
                 /*
@@ -2952,21 +2993,16 @@ $tripJson =
                 */
 
                 tripRouteStartMarker =
-                    L.circleMarker(
-                        points[0], {
-                            radius: 8,
+                    new google.maps.Marker({
 
-                            weight: 3,
+                        position: points[0],
 
-                            fillOpacity: 1
-                        }
-                    )
-                    .addTo(
-                        tripRouteMap
-                    )
-                    .bindPopup(
-                        '<strong>Trip Start</strong>'
-                    );
+                        map: tripRouteMap,
+
+                        title: 'Trip Start',
+
+                        label: 'S'
+                    });
 
 
                 /*
@@ -2975,46 +3011,70 @@ $tripJson =
                 |--------------------------------------------------------------------------
                 */
 
-                if (points.length > 1) {
+                if (
+                    points.length > 1
+                ) {
 
                     tripRouteEndMarker =
-                        L.circleMarker(
-                            points[points.length - 1], {
-                                radius: 8,
+                        new google.maps.Marker({
 
-                                weight: 3,
+                            position: points[
+                                points.length - 1
+                            ],
 
-                                fillOpacity: 1
-                            }
-                        )
-                        .addTo(
-                            tripRouteMap
-                        )
-                        .bindPopup(
-                            '<strong>Trip End</strong>'
-                        );
+                            map: tripRouteMap,
+
+                            title: 'Trip End',
+
+                            label: 'E'
+                        });
                 }
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | Fit map to entire route
+                | Fit whole route
                 |--------------------------------------------------------------------------
                 */
 
-                tripRouteMap.fitBounds(
-                    tripRouteLine.getBounds(), {
-                        padding: [
-                            30,
-                            30
-                        ]
+                const bounds =
+                    new google.maps.LatLngBounds();
+
+
+                points.forEach(
+                    point => {
+
+                        bounds.extend(
+                            point
+                        );
                     }
                 );
 
 
+                if (
+                    points.length > 1
+                ) {
+
+                    tripRouteMap.fitBounds(
+                        bounds,
+                        30
+                    );
+
+                } else {
+
+                    tripRouteMap.setCenter(
+                        points[0]
+                    );
+
+                    tripRouteMap.setZoom(
+                        16
+                    );
+                }
+
+
                 /*
                 |--------------------------------------------------------------------------
-                | Stats
+                | Route stats
                 |--------------------------------------------------------------------------
                 */
 
@@ -3023,34 +3083,6 @@ $tripJson =
 
                 legend.style.display =
                     'flex';
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Leaflet needs a resize after modal becomes visible
-                |--------------------------------------------------------------------------
-                */
-
-                setTimeout(
-                    function() {
-
-                        if (tripRouteMap) {
-
-                            tripRouteMap.invalidateSize();
-
-                            tripRouteMap.fitBounds(
-                                tripRouteLine.getBounds(), {
-                                    padding: [
-                                        30,
-                                        30
-                                    ]
-                                }
-                            );
-                        }
-
-                    },
-                    150
-                );
 
 
             } catch (error) {
