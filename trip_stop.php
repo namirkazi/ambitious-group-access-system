@@ -720,10 +720,10 @@ if (!$trip) {
         |--------------------------------------------------------------------------
         */
         /*
-|--------------------------------------------------------------------------
-| Live GPS Tracking
-|--------------------------------------------------------------------------
-*/
+        |--------------------------------------------------------------------------
+        | Precise Live GPS Tracking
+        |--------------------------------------------------------------------------
+        */
 
         const activeTripId =
             <?= (int) $trip['id'] ?>;
@@ -732,36 +732,24 @@ if (!$trip) {
 
         let lastLocationSentAt = 0;
 
+        let bestAccuracy = Infinity;
+
         const LOCATION_SEND_INTERVAL = 15000;
+
+        /*
+         * Do not save locations worse than this.
+         * 50m is reasonable for the driver system.
+         */
+        const MAX_ACCEPTABLE_ACCURACY = 50;
 
 
         /*
         |--------------------------------------------------------------------------
-        | Send location to server
+        | Process GPS position
         |--------------------------------------------------------------------------
         */
 
-        async function sendTripLocation(position) {
-
-            const now = Date.now();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Don't send more than once every 15 seconds
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                now - lastLocationSentAt <
-                LOCATION_SEND_INTERVAL
-            ) {
-                return;
-            }
-
-
-            lastLocationSentAt = now;
-
+        async function processTripLocation(position) {
 
             const latitude =
                 position.coords.latitude;
@@ -773,23 +761,102 @@ if (!$trip) {
                 position.coords.accuracy;
 
 
+            console.log(
+                'GPS:',
+                latitude,
+                longitude,
+                'Accuracy:',
+                accuracy + 'm'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reject inaccurate GPS readings
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !Number.isFinite(accuracy) ||
+                accuracy > MAX_ACCEPTABLE_ACCURACY
+            ) {
+
+                console.warn(
+                    'Ignoring inaccurate GPS reading:',
+                    accuracy + 'm'
+                );
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Track best accuracy
+            |--------------------------------------------------------------------------
+            */
+
+            if (accuracy < bestAccuracy) {
+
+                bestAccuracy = accuracy;
+
+                console.log(
+                    'New best GPS accuracy:',
+                    bestAccuracy + 'm'
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Rate limit server updates
+            |--------------------------------------------------------------------------
+            */
+
+            const now =
+                Date.now();
+
+
+            if (
+                now - lastLocationSentAt <
+                LOCATION_SEND_INTERVAL
+            ) {
+
+                return;
+            }
+
+
+            lastLocationSentAt =
+                now;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Send GPS
+            |--------------------------------------------------------------------------
+            */
+
             const formData =
                 new FormData();
+
 
             formData.append(
                 'trip_id',
                 activeTripId
             );
 
+
             formData.append(
                 'latitude',
                 latitude
             );
 
+
             formData.append(
                 'longitude',
                 longitude
             );
+
 
             formData.append(
                 'accuracy',
@@ -818,7 +885,17 @@ if (!$trip) {
                         'GPS update failed:',
                         data.message
                     );
+
+                } else {
+
+                    console.log(
+                        'GPS saved:',
+                        latitude,
+                        longitude,
+                        '±' + Math.round(accuracy) + 'm'
+                    );
                 }
+
 
             } catch (error) {
 
@@ -829,87 +906,10 @@ if (!$trip) {
             }
         }
 
-        async function sendFinalTripLocation(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
 
-            const formData = new FormData();
-
-            formData.append('trip_id', activeTripId);
-            formData.append('latitude', latitude);
-            formData.append('longitude', longitude);
-            formData.append('accuracy', accuracy);
-
-            try {
-                const response = await fetch(
-                    'api/update_trip_location.php', {
-                        method: 'POST',
-                        body: formData
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    console.warn(
-                        'Final GPS update failed:',
-                        data.message
-                    );
-
-                    return false;
-                }
-
-                return true;
-
-            } catch (error) {
-                console.warn(
-                    'Final GPS network error:',
-                    error
-                );
-
-                return false;
-            }
-        }
-        async function captureFinalTripLocation() {
-
-            if (!navigator.geolocation) {
-                return false;
-            }
-
-            return new Promise(function(resolve) {
-
-                navigator.geolocation.getCurrentPosition(
-                    async function(position) {
-
-                            const saved =
-                                await sendFinalTripLocation(position);
-
-                            resolve(saved);
-                        },
-
-                        function(error) {
-
-                            console.warn(
-                                'Unable to get final GPS location:',
-                                error.message
-                            );
-
-                            resolve(false);
-                        },
-
-                        {
-                            enableHighAccuracy: true,
-                            maximumAge: 0,
-                            timeout: 10000
-                        }
-                );
-
-            });
-        }
         /*
         |--------------------------------------------------------------------------
-        | GPS error
+        | GPS Error
         |--------------------------------------------------------------------------
         */
 
@@ -917,6 +917,7 @@ if (!$trip) {
 
             console.warn(
                 'GPS error:',
+                error.code,
                 error.message
             );
         }
@@ -924,7 +925,7 @@ if (!$trip) {
 
         /*
         |--------------------------------------------------------------------------
-        | Start GPS tracking
+        | Start GPS Tracking
         |--------------------------------------------------------------------------
         */
 
@@ -942,15 +943,30 @@ if (!$trip) {
             }
 
 
+            console.log(
+                'Starting high accuracy GPS...'
+            );
+
+
             locationWatchId =
                 navigator.geolocation.watchPosition(
-                    sendTripLocation,
-                    locationError, {
+
+                    processTripLocation,
+
+                    locationError,
+
+                    {
                         enableHighAccuracy: true,
 
-                        maximumAge: 10000,
+                        /*
+                         * Don't accept cached locations.
+                         */
+                        maximumAge: 0,
 
-                        timeout: 20000
+                        /*
+                         * Give GPS enough time to lock.
+                         */
+                        timeout: 30000
                     }
                 );
         }
@@ -958,7 +974,7 @@ if (!$trip) {
 
         /*
         |--------------------------------------------------------------------------
-        | Stop GPS tracking
+        | Stop GPS Tracking
         |--------------------------------------------------------------------------
         */
 
@@ -972,7 +988,270 @@ if (!$trip) {
                     locationWatchId
                 );
 
-                locationWatchId = null;
+                locationWatchId =
+                    null;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get precise final trip location
+        |--------------------------------------------------------------------------
+        */
+
+        async function captureFinalTripLocation() {
+
+            if (
+                !navigator.geolocation
+            ) {
+
+                return false;
+            }
+
+
+            return new Promise(
+                function(resolve) {
+
+                    let bestPosition =
+                        null;
+
+                    let finalWatchId =
+                        null;
+
+
+                    /*
+                     * Allow the phone up to 15 seconds
+                     * to improve the GPS lock.
+                     */
+                    const timeout =
+                        setTimeout(
+                            async function() {
+
+                                    if (
+                                        finalWatchId !== null
+                                    ) {
+
+                                        navigator.geolocation
+                                            .clearWatch(
+                                                finalWatchId
+                                            );
+                                    }
+
+
+                                    if (!bestPosition) {
+
+                                        console.warn(
+                                            'No accurate final GPS position.'
+                                        );
+
+                                        resolve(false);
+
+                                        return;
+                                    }
+
+
+                                    const saved =
+                                        await sendFinalTripLocation(
+                                            bestPosition
+                                        );
+
+
+                                    resolve(saved);
+
+                                },
+                                15000
+                        );
+
+
+                    finalWatchId =
+                        navigator.geolocation
+                        .watchPosition(
+
+                            async function(position) {
+
+                                    const accuracy =
+                                        position.coords
+                                        .accuracy;
+
+
+                                    console.log(
+                                        'Final GPS candidate:',
+                                        accuracy + 'm'
+                                    );
+
+
+                                    /*
+                                     * Ignore bad readings.
+                                     */
+                                    if (
+                                        !Number.isFinite(
+                                            accuracy
+                                        ) ||
+                                        accuracy >
+                                        MAX_ACCEPTABLE_ACCURACY
+                                    ) {
+
+                                        return;
+                                    }
+
+
+                                    /*
+                                     * Keep the most accurate
+                                     * position received.
+                                     */
+                                    if (
+                                        !bestPosition ||
+                                        accuracy <
+                                        bestPosition.coords
+                                        .accuracy
+                                    ) {
+
+                                        bestPosition =
+                                            position;
+                                    }
+
+
+                                    /*
+                                     * Excellent GPS lock.
+                                     *
+                                     * If we reach <= 20m,
+                                     * save immediately.
+                                     */
+                                    if (
+                                        accuracy <= 20
+                                    ) {
+
+                                        clearTimeout(
+                                            timeout
+                                        );
+
+
+                                        navigator.geolocation
+                                            .clearWatch(
+                                                finalWatchId
+                                            );
+
+
+                                        const saved =
+                                            await sendFinalTripLocation(
+                                                position
+                                            );
+
+
+                                        resolve(saved);
+                                    }
+                                },
+
+
+                                function(error) {
+
+                                    console.warn(
+                                        'Final GPS error:',
+                                        error.message
+                                    );
+                                },
+
+
+                                {
+                                    enableHighAccuracy: true,
+
+                                    maximumAge: 0,
+
+                                    timeout: 15000
+                                }
+                        );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Save final position
+        |--------------------------------------------------------------------------
+        */
+
+        async function sendFinalTripLocation(
+            position
+        ) {
+
+            const accuracy =
+                position.coords.accuracy;
+
+
+            /*
+             * Never save a garbage final location.
+             */
+            if (
+                !Number.isFinite(accuracy) ||
+                accuracy >
+                MAX_ACCEPTABLE_ACCURACY
+            ) {
+
+                console.warn(
+                    'Final GPS rejected:',
+                    accuracy + 'm'
+                );
+
+                return false;
+            }
+
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                'trip_id',
+                activeTripId
+            );
+
+
+            formData.append(
+                'latitude',
+                position.coords.latitude
+            );
+
+
+            formData.append(
+                'longitude',
+                position.coords.longitude
+            );
+
+
+            formData.append(
+                'accuracy',
+                accuracy
+            );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        'api/update_trip_location.php', {
+                            method: 'POST',
+                            body: formData
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                return !!data.success;
+
+
+            } catch (error) {
+
+                console.warn(
+                    'Final GPS network error:',
+                    error
+                );
+
+                return false;
             }
         }
 
