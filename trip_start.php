@@ -769,6 +769,23 @@ $vehicles = $vehicleStmt->fetchAll(PDO::FETCH_ASSOC);
 
                     event.preventDefault();
 
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Location permission is mandatory
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const locationAllowed =
+                        await requireLocation();
+
+
+                    if (!locationAllowed) {
+
+                        return;
+                    }
+
+
                     const form = this;
 
                     const button =
@@ -893,7 +910,79 @@ $vehicles = $vehicleStmt->fetchAll(PDO::FETCH_ASSOC);
                 }
             );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Require location before starting trip
+        |--------------------------------------------------------------------------
+        */
 
+        function requireLocation() {
+
+            return new Promise((resolve) => {
+
+                if (!navigator.geolocation) {
+
+                    alert(
+                        'Location services are required to start a trip.'
+                    );
+
+                    resolve(false);
+
+                    return;
+                }
+
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function(position) {
+
+                        console.log(
+                            'Location allowed:',
+                            position.coords.latitude,
+                            position.coords.longitude,
+                            'Accuracy:',
+                            position.coords.accuracy + 'm'
+                        );
+
+                        resolve(true);
+                    },
+
+                    function(error) {
+
+                        console.warn(
+                            'Location error:',
+                            error
+                        );
+
+
+                        if (
+                            error.code ===
+                            error.PERMISSION_DENIED
+                        ) {
+
+                            alert(
+                                'Location permission is required to start a trip. Please allow location access and try again.'
+                            );
+
+                        } else {
+
+                            alert(
+                                'Unable to get your location. Please enable GPS/location services and try again.'
+                            );
+                        }
+
+
+                        resolve(false);
+                    },
+
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 0,
+                        timeout: 15000
+                    }
+                );
+            });
+        }
         /*
         |--------------------------------------------------------------------------
         | Compress image in browser

@@ -180,12 +180,8 @@ $tripJson =
 
 <head>
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
     <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2btEDujkLNdM08fCmkfAZymR7DrT8HUM&language=en&region=AE">
     </script>
     <meta charset="UTF-8">
 
@@ -1526,9 +1522,6 @@ $tripJson =
 
         }
     </style>
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
 </head>
 
 
@@ -2261,20 +2254,28 @@ $tripJson =
 
 
             liveMap =
-                L.map('liveMap')
-                .setView(
-                    [25.2048, 55.2708],
-                    12
+                new google.maps.Map(
+                    document.getElementById(
+                        'liveMap'
+                    ), {
+                        center: {
+                            lat: 25.2048,
+                            lng: 55.2708
+                        },
+
+                        zoom: 12,
+
+                        mapTypeId: google.maps.MapTypeId.ROADMAP,
+
+                        mapTypeControl: false,
+
+                        streetViewControl: false,
+
+                        fullscreenControl: true,
+
+                        zoomControl: true
+                    }
                 );
-
-
-            L.tileLayer(
-                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-
-                    attribution: '&copy; OpenStreetMap contributors'
-                }
-            ).addTo(liveMap);
         }
 
 
@@ -2377,47 +2378,66 @@ $tripJson =
                 |--------------------------------------------------------------------------
                 */
 
+                /*
+|--------------------------------------------------------------------------
+| Google Maps position
+|--------------------------------------------------------------------------
+*/
+
+                const driverPosition = {
+
+                    lat: latitude,
+
+                    lng: longitude
+                };
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update marker
+                |--------------------------------------------------------------------------
+                */
+
                 if (!liveMarker) {
 
                     liveMarker =
-                        L.marker([
-                            latitude,
-                            longitude
-                        ])
-                        .addTo(liveMap);
+                        new google.maps.Marker({
 
-                    liveMarker.bindPopup(
-                        currentTrip ?
-                        escapeHtml(
-                            currentTrip.driver_name
-                        ) :
-                        'Driver'
-                    );
+                            position: driverPosition,
+
+                            map: liveMap,
+
+                            title: currentTrip ?
+                                currentTrip.driver_name : 'Driver'
+                        });
 
                 } else {
 
-                    liveMarker.setLatLng([
-                        latitude,
-                        longitude
-                    ]);
+                    liveMarker.setPosition(
+                        driverPosition
+                    );
                 }
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | Move map
+                | Move Google map
                 |--------------------------------------------------------------------------
                 */
 
-                liveMap.setView(
-                    [
-                        latitude,
-                        longitude
-                    ],
-                    liveMap.getZoom() < 15 ?
-                    15 :
-                    liveMap.getZoom()
+                liveMap.setCenter(
+                    driverPosition
                 );
+
+
+                if (
+                    liveMap.getZoom() < 15
+                ) {
+
+                    liveMap.setZoom(
+                        15
+                    );
+                }
 
 
                 /*
@@ -2512,19 +2532,6 @@ $tripJson =
             |--------------------------------------------------------------------------
             */
 
-            setTimeout(
-                function() {
-
-                    if (liveMap) {
-
-                        liveMap.invalidateSize();
-
-                    }
-
-                },
-                100
-            );
-
 
             /*
             |--------------------------------------------------------------------------
@@ -2574,7 +2581,7 @@ $tripJson =
 
             if (liveMarker) {
 
-                liveMarker.remove();
+                liveMarker.setMap(null);
 
                 liveMarker = null;
             }
