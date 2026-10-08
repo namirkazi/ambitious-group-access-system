@@ -92,12 +92,51 @@ if (
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Accuracy is mandatory
+|--------------------------------------------------------------------------
+*/
+
 if (
-    $accuracy !== null &&
-    ($accuracy < 0 || $accuracy > 100000)
+    $accuracy === null ||
+    !is_finite($accuracy)
 ) {
 
-    $accuracy = null;
+    http_response_code(422);
+
+    echo json_encode([
+        'success' => false,
+        'message' =>
+        'GPS accuracy is required.'
+    ]);
+
+    exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Reject inaccurate GPS
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $accuracy <= 0 ||
+    $accuracy > 25
+) {
+
+    http_response_code(422);
+
+    echo json_encode([
+        'success' => false,
+        'message' =>
+        'GPS accuracy too low. Current accuracy: ±' .
+            round($accuracy) .
+            ' metres.'
+    ]);
+
+    exit;
 }
 
 
